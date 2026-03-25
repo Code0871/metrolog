@@ -1,7 +1,6 @@
 # metrolog
 
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
 
 ## О проекте
 **Metrolog** это _Multi-Task Learning (MTL)_ model, предназначенная преимущественно для **аналитической** работы с парком средств измерений (СИ)
