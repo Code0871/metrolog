@@ -1,5 +1,10 @@
 ## технический стек:
 
+
+**Языки программирования:** Python, Go, JavaScript (Node.js), HTML5, CSS  
+**Фреймворки и библиотеки:** Pandas, NumPy, Dask, CatBoost, TensorFlow, Express (Node.js), React  
+**Инструменты и платформы:** Docker, MLflow, PostgreSQL, Redis, Qdrant, npm/yarn, Webpack
+
 #### Библиотеки обработки данных:
 - **Pandas** — основная библиотека для манипуляции табличными данными. Обеспечивает чтение данных из PostgreSQL, очистку, фильтрацию и агрегацию. Выбрана как стандарт де-факто в анализе данных на Python
 - **NumPy** — фундамент для векторных вычислений. Используется как основа для TensorFlow и CatBoost, а также для вычисления пользовательских метрик (PSI, custom loss)
