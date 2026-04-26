@@ -4,6 +4,8 @@
 ![Go](https://img.shields.io/badge/go-1.21%2B-00ADD8)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B-0064a5)
 ![Qdrant](https://img.shields.io/badge/Qdrant-latest-4B0082)
+![Docker](https://img.shields.io/badge/docker-24%2B-2496ED)
+![Redpanda](https://img.shields.io/badge/Redpanda-latest-FF4D00)
 
 ## О проекте
 **Metrolog** это набор специализированных ИИ агентов, предназначенных для работы с парком средств измерений (СИ)
