@@ -9,7 +9,7 @@ build/
 dist/
 *.egg-info/
 
-# Данные (ваши data/ и training/)
+# Данные (data/ и training/)
 data/
 training/
 

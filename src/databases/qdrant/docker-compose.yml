@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: diploma_qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./storage:/qdrant/storage
+    environment:
+      - QDRANT__TELEMETRY_DISABLED=true
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
