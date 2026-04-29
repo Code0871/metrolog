@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Metrolog — Парк СИ. Интерфейс для управления средствами измерений с AI-поиском, фильтрацией и прогнозом закупок.">
+    <title>Metrolog — Парк СИ</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <main class="page-layout">
+            <section class="workspace-card">
+                <div class="toolbar">
+                    <div class="search-block">
+                        <div class="search-row">
+                            <div id="search-input-wrap" class="search-input-wrap">
+                                <input
+                                    id="search-input"
+                                    type="text"
+                                    placeholder="Найти СИ по названию, типу, описанию..."
+                                    aria-label="Найти СИ по названию, типу, описанию"
+                                >
+                                <span class="search-spinner" aria-hidden="true"></span>
+                            </div>
+                        </div>
+                        <div id="loading-indicator" class="loading-indicator" aria-live="polite"></div>
+
+                        <div id="expiring-range-panel" class="range-panel hidden" aria-label="Фильтры по сроку истечения">
+                            <span class="range-panel__label">Период истечения</span>
+                            <div class="range-panel__buttons">
+                                <button class="range-filter is-active" type="button" data-range="all">Все периоды</button>
+                                <button class="range-filter" type="button" data-range="week">Неделя</button>
+                                <button class="range-filter" type="button" data-range="month">Месяц</button>
+                                <button class="range-filter" type="button" data-range="year">Год</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="toolbar-side">
+                        <div class="actions-block">
+                            <button id="all-button" class="button button--primary" type="button">Все СИ</button>
+                            <button id="expiring-button" class="button button--secondary" type="button">Истекающие СИ</button>
+                            <a id="forecast-button" class="button button--ghost button--link" href="forecast.html">Прогноз закупок</a>
+                        </div>
+                        <div id="expiring-meta-host" class="expiring-meta expiring-meta--side hidden"></div>
+                    </div>
+                </div>
+
+                <div id="table-header" class="table-header">
+                    <div id="table-header-info">
+                        <p class="section-kicker">Реестр СИ</p>
+                        <h3>Все средства измерений</h3>
+                    </div>
+                    <div id="table-header-meta" class="table-header__meta">
+                        <span id="table-summary">Показано 0 записей</span>
+                        <label class="rows-control" for="rows-per-page">
+                            <span>Строк</span>
+                            <select id="rows-per-page">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="si-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Наименование</th>
+                                <th>Тип СИ</th>
+                                <th>Дата ввода в эксплуатацию</th>
+                                <th>МПИ</th>
+                                <th>Статус срока службы</th>
+                                <th>Остаточный срок</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <div id="page-info" class="page-info">Страница 1</div>
+                    <div class="pagination">
+                        <button id="prev-page" class="button button--small button--secondary" type="button">Назад</button>
+                        <div id="pagination-numbers" class="pagination__numbers"></div>
+                        <button id="next-page" class="button button--small button--secondary" type="button">Вперед</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
