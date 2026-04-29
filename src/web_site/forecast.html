@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Metrolog — прогноз закупок СИ по данным срока службы и плановых замен.">
+    <title>Metrolog — Прогноз закупок</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <main class="page-layout">
+            <section class="workspace-card">
+                <div class="toolbar toolbar--forecast">
+                    <div>
+                        <p class="section-kicker">Прогноз закупок</p>
+                        <h1 class="page-title">Плановые закупки средств измерений</h1>
+                    </div>
+
+                    <div class="toolbar-side toolbar-side--forecast">
+                        <div class="actions-block actions-block--forecast">
+                            <a class="button button--secondary button--link" href="index.html?view=all">Все СИ</a>
+                            <a class="button button--secondary button--link" href="index.html?view=expiring">Истекающие СИ</a>
+                            <a class="button button--primary button--link" href="forecast.html" aria-current="page">Прогноз закупок</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-header">
+                    <div>
+                        <p class="section-kicker">Прогноз</p>
+                        <h3>План закупок по СИ</h3>
+                    </div>
+                    <div class="table-header__meta">
+                        <div class="forecast-filters forecast-filters--inline">
+                            <label class="date-control" for="forecast-start-date">
+                                <span>Начальная дата</span>
+                                <input id="forecast-start-date" type="date">
+                            </label>
+                            <label class="date-control" for="forecast-end-date">
+                                <span>Конечная дата</span>
+                                <input id="forecast-end-date" type="date">
+                            </label>
+                        </div>
+                        <span id="forecast-summary">Показано 0 записей</span>
+                    </div>
+                </div>
+
+                <div class="table-wrap table-wrap--tall">
+                    <table class="si-table">
+                        <thead>
+                            <tr>
+                                <th>Период</th>
+                                <th>Наименование СИ</th>
+                                <th>Тип СИ</th>
+                                <th>Причина закупки</th>
+                                <th>План</th>
+                                <th>Количество</th>
+                            </tr>
+                        </thead>
+                        <tbody id="forecast-table-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer">
+                    <div id="forecast-page-info" class="page-info">Страница 1</div>
+                    <div class="pagination">
+                        <button id="forecast-prev-page" class="button button--small button--secondary" type="button">Назад</button>
+                        <div id="forecast-pagination-numbers" class="pagination__numbers"></div>
+                        <button id="forecast-next-page" class="button button--small button--secondary" type="button">Вперед</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="forecast.js"></script>
+</body>
+</html>
