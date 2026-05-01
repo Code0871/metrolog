@@ -1,0 +1,14 @@
+services:
+  service_park_db:
+    image: postgres:15
+    container_name: service_park_db
+    env_file:
+      - ./src/service_park/.env
+    volumes:
+      - service_park_db_volume:/var/lib/postgresql/data
+      - ./backup:/backup
+    ports:
+      - "5432:5432"
+
+volumes:
+  service_park_db_volume:
