@@ -2,17 +2,34 @@ services:
   service_park_db:
     image: postgres:17
     container_name: service_park_db
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_HOST_AUTH_METHOD=scram-sha-256
-      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    env_file:
+      - ./src/service_park/.env
     volumes:
       - service_park_db_volume:/var/lib/postgresql/data
       - ./backup:/backup
     ports:
       - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - metrolog_network
+
+  service_park_app:                    # ← добавить 2 пробела перед service_park_app
+    build: ./src/service_park
+    container_name: service_park_app
+    env_file:
+      - ./src/service_park/.env
+    ports:
+      - "8080:8080"
+    networks:
+      - metrolog_network
+    depends_on:
+      - service_park_db
+    restart: unless-stopped
+
+networks:
+  metrolog_network:
+    driver: bridge
+    name: metrolog_network
 
 volumes:
   service_park_db_volume:
