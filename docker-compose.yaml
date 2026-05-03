@@ -9,6 +9,19 @@ services:
       - ./backup:/backup
     ports:
       - "5432:5432"
+  
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    env_file: ./src/searcher/config/.env
+    ports: 
+      - "6333:6333"
+    volumes: 
+      - qdrant_data/qdrant/storage
+    restart: unless-stopped
+
+  searcher:
+
 
 volumes:
   service_park_db_volume:
