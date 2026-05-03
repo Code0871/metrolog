@@ -47,24 +47,43 @@ func NewMiInstanceHandler(service *service.MiInstanceService) *MIInstanceHandler
 //	  "total": 265336
 //	}
 func (h *MIInstanceHandler) GetAll(c *gin.Context) {
+	const (
+		defaultLimit = 20
+		maxLimit     = 200
+	)
+
 	// парсинг параметров пагинации
-	limit := 20
+	limit := defaultLimit
 	offset := 0
+	query := strings.TrimSpace(c.Query("query"))
+	expiringRange := strings.TrimSpace(c.Query("expiring_range"))
+
+	if expiringRange != "" && expiringRange != "all" && expiringRange != "week" && expiringRange != "month" && expiringRange != "year" {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "expiring_range must be one of: all, week, month, year",
+		})
+		return
+	}
 
 	if l := c.Query("limit"); l != "" {
 		if val, err := strconv.Atoi(l); err == nil && val > 0 {
-			limit = val
+			if val > maxLimit {
+				limit = maxLimit
+			} else {
+				limit = val
+			}
 		}
 	}
 
 	if o := c.Query("offset"); o != "" {
-		if val, err := strconv.Atoi(o); err == nil && val > 0 {
+		if val, err := strconv.Atoi(o); err == nil && val >= 0 {
 			offset = val
 		}
 	}
 
 	// вызов сервиса для получения данных
-	instances, total, err := h.service.GetAll(limit, offset)
+	instances, total, err := h.service.GetAll(limit, offset, query, expiringRange)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.Response{
@@ -94,8 +113,23 @@ func (h *MIInstanceHandler) GetByPassport(c *gin.Context) {
 		return
 	}
 
-	// Разделяем строку по запятой
-	passports := strings.Split(passportsStr, ",")
+	// Разделяем строку по запятой и очищаем пробелы
+	rawPassports := strings.Split(passportsStr, ",")
+	passports := make([]string, 0, len(rawPassports))
+	for _, passport := range rawPassports {
+		trimmedPassport := strings.TrimSpace(passport)
+		if trimmedPassport != "" {
+			passports = append(passports, trimmedPassport)
+		}
+	}
+
+	if len(passports) == 0 {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "Passport parameter is required",
+		})
+		return
+	}
 
 	// Вызываем метод для нескольких паспортов
 	instances, err := h.service.GetByPassport(passports)

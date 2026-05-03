@@ -1,136 +1,18 @@
-const siData = [
-    {
-        id: "SI-001",
-        name: "Весы лабораторные ВЛ-210",
-        type: "Весы",
-        commissioningDate: "14.03.2018",
-        mpi: "12 мес.",
-        status: "В норме",
-        remaining: "237 дней",
-        description: "Лабораторные весы высокой точности для аналитических измерений."
-    },
-    {
-        id: "SI-002",
-        name: "Манометр МП-100",
-        type: "Манометр",
-        commissioningDate: "05.11.2016",
-        mpi: "12 мес.",
-        status: "Приближается к снятию",
-        remaining: "Снятие 15.12.2026",
-        description: "Манометр для контроля давления в трубопроводах и технологических линиях."
-    },
-    {
-        id: "SI-003",
-        name: "Датчик температуры ТСМ-920",
-        type: "Датчик",
-        commissioningDate: "22.07.2019",
-        mpi: "6 мес.",
-        status: "В норме",
-        remaining: "412 дней",
-        description: "Промышленный датчик температуры для производственных агрегатов."
-    },
-    {
-        id: "SI-004",
-        name: "Расходомер РМ-08",
-        type: "Расходомер",
-        commissioningDate: "11.02.2015",
-        mpi: "12 мес.",
-        status: "Требует замены",
-        remaining: "Снятие 02.06.2026",
-        description: "Средство измерения расхода жидкости на узле учета."
-    },
-    {
-        id: "SI-005",
-        name: "Весы платформенные ВП-500",
-        type: "Весы",
-        commissioningDate: "29.08.2017",
-        mpi: "12 мес.",
-        status: "Приближается к снятию",
-        remaining: "Снятие 30.01.2027",
-        description: "Платформенные весы для складских и приемо-сдаточных операций."
-    },
-    {
-        id: "SI-006",
-        name: "Термометр ТЛ-4",
-        type: "Термометр",
-        commissioningDate: "10.12.2020",
-        mpi: "6 мес.",
-        status: "В норме",
-        remaining: "518 дней",
-        description: "Технический термометр для контроля температуры в лаборатории."
-    },
-    {
-        id: "SI-007",
-        name: "Манометр МВП-63",
-        type: "Манометр",
-        commissioningDate: "18.04.2014",
-        mpi: "12 мес.",
-        status: "Требует замены",
-        remaining: "Снятие 19.09.2026",
-        description: "Вакуумметрический манометр для компрессорного оборудования."
-    },
-    {
-        id: "SI-008",
-        name: "Датчик давления ДД-51",
-        type: "Датчик",
-        commissioningDate: "02.05.2021",
-        mpi: "12 мес.",
-        status: "В норме",
-        remaining: "604 дня",
-        description: "Датчик давления для мониторинга технологических емкостей."
-    },
-    {
-        id: "SI-009",
-        name: "Газоанализатор ГА-300",
-        type: "Газоанализатор",
-        commissioningDate: "16.01.2018",
-        mpi: "12 мес.",
-        status: "Приближается к снятию",
-        remaining: "Снятие 01.11.2026",
-        description: "Анализатор состава газовой среды для промышленных площадок."
-    },
-    {
-        id: "SI-010",
-        name: "Осциллограф ОС-220",
-        type: "Осциллограф",
-        commissioningDate: "25.09.2019",
-        mpi: "24 мес.",
-        status: "В норме",
-        remaining: "690 дней",
-        description: "Измерительный прибор для анализа электрических сигналов."
-    },
-    {
-        id: "SI-011",
-        name: "Тахометр ТХ-11",
-        type: "Тахометр",
-        commissioningDate: "07.06.2013",
-        mpi: "12 мес.",
-        status: "Требует замены",
-        remaining: "Снятие 12.08.2026",
-        description: "Тахометр для измерения скорости вращения оборудования."
-    },
-    {
-        id: "SI-012",
-        name: "Влагомер ВМ-75",
-        type: "Влагомер",
-        commissioningDate: "30.10.2020",
-        mpi: "12 мес.",
-        status: "В норме",
-        remaining: "540 дней",
-        description: "Прибор для контроля влажности сырья и производственных материалов."
-    }
-];
+const DEFAULT_API_BASE_URL = "http://localhost:8080";
+const SEARCH_DEBOUNCE_MS = 400;
+const MILLISECONDS_IN_DAY = 24 * 60 * 60 * 1000;
 
 const state = {
-    sourceData: siData,
-    filteredData: [...siData],
+    pageData: [],
+    totalItems: 0,
     currentPage: 1,
     rowsPerPage: 10,
     expiringOnly: false,
     currentQuery: "",
     expiringRange: "all",
     searchDebounceId: null,
-    searchController: null
+    requestController: null,
+    errorMessage: ""
 };
 
 const elements = {
@@ -161,6 +43,18 @@ function getInitialViewMode() {
     return searchParams.get("view") === "expiring";
 }
 
+function getApiBaseUrl() {
+    if (typeof window.METROLOG_API_BASE_URL === "string" && window.METROLOG_API_BASE_URL.trim()) {
+        return window.METROLOG_API_BASE_URL.trim().replace(/\/$/, "");
+    }
+
+    if (window.location.origin === DEFAULT_API_BASE_URL) {
+        return "";
+    }
+
+    return DEFAULT_API_BASE_URL;
+}
+
 function getStatusClass(status) {
     if (status === "В норме") {
         return "status-badge status-badge--normal";
@@ -168,57 +62,168 @@ function getStatusClass(status) {
     if (status === "Приближается к снятию") {
         return "status-badge status-badge--warning";
     }
-    return "status-badge status-badge--critical";
+    if (status === "Требует замены") {
+        return "status-badge status-badge--critical";
+    }
+    return "status-badge";
 }
 
-function parseRemovalDate(value) {
-    const match = value.match(/(\d{2})\.(\d{2})\.(\d{4})/);
-
-    if (!match) {
+function parseApiDate(value) {
+    if (!value || typeof value !== "string") {
         return null;
     }
 
-    const [, day, month, year] = match;
-    return new Date(Number(year), Number(month) - 1, Number(day));
+    const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+
+    if (!year || !month || !day) {
+        return null;
+    }
+
+    return new Date(year, month - 1, day);
 }
 
-function getExpiringRangeLimit(range) {
+function formatDate(value) {
+    if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+        return "Нет данных";
+    }
+
+    return value.toLocaleDateString("ru-RU");
+}
+
+function addMonths(date, months) {
+    const result = new Date(date);
+    result.setMonth(result.getMonth() + months);
+    return result;
+}
+
+function calculateDayDiff(targetDate) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const limit = new Date(today);
+    const dueDate = new Date(targetDate);
+    dueDate.setHours(0, 0, 0, 0);
 
-    if (range === "week") {
-        limit.setDate(limit.getDate() + 7);
-        return { start: today, end: limit };
-    }
-
-    if (range === "month") {
-        limit.setMonth(limit.getMonth() + 1);
-        return { start: today, end: limit };
-    }
-
-    if (range === "year") {
-        limit.setFullYear(limit.getFullYear() + 1);
-        return { start: today, end: limit };
-    }
-
-    return null;
+    return Math.ceil((dueDate.getTime() - today.getTime()) / MILLISECONDS_IN_DAY);
 }
 
-function matchesExpiringRange(item) {
-    if (!state.expiringOnly || state.expiringRange === "all") {
-        return true;
+function mapApiItem(item) {
+    const commissioningDate = parseApiDate(item.commissioning_date);
+    const mpiMonths = typeof item.mpi === "number" ? item.mpi : null;
+    const nextInspectionDate = commissioningDate && Number.isInteger(mpiMonths)
+        ? addMonths(commissioningDate, mpiMonths)
+        : null;
+
+    let status = "Нет данных";
+    let remaining = "Нет данных";
+
+    if (nextInspectionDate) {
+        const daysRemaining = calculateDayDiff(nextInspectionDate);
+
+        if (daysRemaining < 0) {
+            status = "Требует замены";
+            remaining = `Снятие ${formatDate(nextInspectionDate)}`;
+        } else if (daysRemaining <= 365) {
+            status = "Приближается к снятию";
+            remaining = `Снятие ${formatDate(nextInspectionDate)}`;
+        } else {
+            status = "В норме";
+            remaining = `${daysRemaining} дней`;
+        }
     }
 
-    const removalDate = parseRemovalDate(item.remaining);
-    const range = getExpiringRangeLimit(state.expiringRange);
+    const passport = item.passport || "Нет данных";
 
-    if (!removalDate || !range) {
-        return false;
+    return {
+        id: passport,
+        name: item.name || "Без названия",
+        type: item.type || "Нет данных",
+        commissioningDate: formatDate(commissioningDate),
+        mpi: Number.isInteger(mpiMonths) ? `${mpiMonths} мес.` : "Нет данных",
+        status,
+        remaining,
+        description: `Паспорт: ${passport}`
+    };
+}
+
+function getPageCount() {
+    return Math.max(1, Math.ceil(state.totalItems / state.rowsPerPage));
+}
+
+function updateLoadingIndicator(message = "") {
+    elements.loadingIndicator.textContent = message;
+}
+
+function buildApiUrl() {
+    const params = new URLSearchParams({
+        limit: String(state.rowsPerPage),
+        offset: String((state.currentPage - 1) * state.rowsPerPage)
+    });
+
+    if (state.currentQuery.trim()) {
+        params.set("query", state.currentQuery.trim());
     }
 
-    return removalDate >= range.start && removalDate <= range.end;
+    if (state.expiringOnly) {
+        params.set("expiring_range", state.expiringRange);
+    }
+
+    return `${getApiBaseUrl()}/api/miinstance?${params.toString()}`;
+}
+
+async function loadTableData() {
+    if (state.requestController) {
+        state.requestController.abort();
+    }
+
+    const controller = new AbortController();
+    state.requestController = controller;
+    state.errorMessage = "";
+    setLoading(true);
+    updateLoadingIndicator("Загрузка данных из Service Park...");
+
+    try {
+        const response = await fetch(buildApiUrl(), {
+            method: "GET",
+            signal: controller.signal,
+            headers: {
+                Accept: "application/json"
+            }
+        });
+
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok || !payload || !payload.success) {
+            throw new Error((payload && payload.error) || `Request failed with status ${response.status}`);
+        }
+
+        state.pageData = Array.isArray(payload.data) ? payload.data.map(mapApiItem) : [];
+        state.totalItems = typeof payload.total === "number" ? payload.total : 0;
+
+        const totalPages = getPageCount();
+        if (state.currentPage > totalPages) {
+            state.currentPage = totalPages;
+            await loadTableData();
+            return;
+        }
+
+        renderTable();
+        updateLoadingIndicator(state.totalItems === 0 ? "Совпадений не найдено." : "");
+    } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+            return;
+        }
+
+        state.pageData = [];
+        state.totalItems = 0;
+        state.errorMessage = "Не удалось загрузить данные из Service Park. Проверь, что сервер запущен на http://localhost:8080.";
+        renderTable();
+        updateLoadingIndicator(state.errorMessage);
+    } finally {
+        if (state.requestController === controller) {
+            state.requestController = null;
+            setLoading(false);
+        }
+    }
 }
 
 function updateRangeFilters() {
@@ -251,37 +256,13 @@ function updateModeButtons() {
     elements.expiringButton.classList.toggle("button--secondary", !state.expiringOnly);
 }
 
-function applyFilters() {
-    const query = state.currentQuery.trim().toLowerCase();
-
-    state.filteredData = state.sourceData.filter((item) => {
-        const matchesSearch = !query
-            || item.name.toLowerCase().includes(query)
-            || item.type.toLowerCase().includes(query)
-            || item.description.toLowerCase().includes(query);
-
-        const matchesExpiring = !state.expiringOnly
-            || item.status === "Приближается к снятию"
-            || item.status === "Требует замены";
-
-        return matchesSearch && matchesExpiring && matchesExpiringRange(item);
-    });
-
-    const totalPages = Math.max(1, Math.ceil(state.filteredData.length / state.rowsPerPage));
-    if (state.currentPage > totalPages) {
-        state.currentPage = totalPages;
-    }
-}
-
 function renderTable() {
-    applyFilters();
     updateRangeFilters();
     updateExpiringLayout();
     updateModeButtons();
 
-    const startIndex = (state.currentPage - 1) * state.rowsPerPage;
-    const pageItems = state.filteredData.slice(startIndex, startIndex + state.rowsPerPage);
-    const totalPages = Math.max(1, Math.ceil(state.filteredData.length / state.rowsPerPage));
+    const pageItems = state.pageData;
+    const totalPages = getPageCount();
 
     elements.tableBody.innerHTML = pageItems.length
         ? pageItems.map((item) => `
@@ -303,12 +284,19 @@ function renderTable() {
         : `
             <tr>
                 <td colspan="7">
-                    <div class="empty-state">Ничего не найдено. Измените поисковый запрос или отключите фильтр.</div>
+                    <div class="empty-state">${state.errorMessage || "Ничего не найдено. Измените поисковый запрос или отключите фильтр."}</div>
                 </td>
             </tr>
         `;
 
-    elements.tableSummary.textContent = `Показано ${pageItems.length} из ${state.filteredData.length} записей`;
+    if (state.totalItems === 0) {
+        elements.tableSummary.textContent = "Показано 0 записей";
+    } else {
+        const startIndex = (state.currentPage - 1) * state.rowsPerPage + 1;
+        const endIndex = startIndex + pageItems.length - 1;
+        elements.tableSummary.textContent = `Показано ${startIndex}-${endIndex} из ${state.totalItems} записей`;
+    }
+
     elements.pageInfo.textContent = `Страница ${state.currentPage} из ${totalPages}`;
     elements.prevPage.disabled = state.currentPage === 1;
     elements.nextPage.disabled = state.currentPage === totalPages;
@@ -319,17 +307,54 @@ function renderTable() {
 function renderPagination(totalPages) {
     elements.paginationNumbers.innerHTML = "";
 
-    for (let page = 1; page <= totalPages; page += 1) {
+    if (totalPages <= 1) {
+        return;
+    }
+
+    const visibleWindow = 5;
+    let startPage = Math.max(1, state.currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + visibleWindow - 1);
+
+    if (endPage - startPage + 1 < visibleWindow) {
+        startPage = Math.max(1, endPage - visibleWindow + 1);
+    }
+
+    const pages = [];
+
+    if (startPage > 1) {
+        pages.push(1);
+        if (startPage > 2) {
+            pages.push("...");
+        }
+    }
+
+    for (let page = startPage; page <= endPage; page += 1) {
+        pages.push(page);
+    }
+
+    if (endPage < totalPages) {
+        pages.push("...");
+    }
+
+    pages.forEach((page) => {
+        if (page === "...") {
+            const ellipsis = document.createElement("span");
+            ellipsis.className = "pagination__ellipsis";
+            ellipsis.textContent = "...";
+            elements.paginationNumbers.appendChild(ellipsis);
+            return;
+        }
+
         const button = document.createElement("button");
         button.type = "button";
         button.className = `pagination__number${page === state.currentPage ? " is-active" : ""}`;
         button.textContent = String(page);
         button.addEventListener("click", () => {
             state.currentPage = page;
-            renderTable();
+            loadTableData();
         });
         elements.paginationNumbers.appendChild(button);
-    }
+    });
 }
 
 function setLoading(isLoading) {
@@ -341,24 +366,6 @@ function abortPendingSearch() {
         window.clearTimeout(state.searchDebounceId);
         state.searchDebounceId = null;
     }
-
-    if (state.searchController) {
-        state.searchController.abort();
-        state.searchController = null;
-    }
-}
-
-function performSearchRequest(query, signal) {
-    return new Promise((resolve, reject) => {
-        const timeoutId = window.setTimeout(() => {
-            resolve(query);
-        }, 300);
-
-        signal.addEventListener("abort", () => {
-            window.clearTimeout(timeoutId);
-            reject(new DOMException("Search aborted", "AbortError"));
-        }, { once: true });
-    });
 }
 
 function scheduleSearch() {
@@ -366,44 +373,28 @@ function scheduleSearch() {
 
     abortPendingSearch();
 
-    state.searchDebounceId = window.setTimeout(async () => {
-        const controller = new AbortController();
-        state.searchController = controller;
+    state.searchDebounceId = window.setTimeout(() => {
         state.currentPage = 1;
-        setLoading(true);
-
-        try {
-            const resolvedQuery = await performSearchRequest(nextQuery, controller.signal);
-            state.currentQuery = resolvedQuery;
-            renderTable();
-        } catch (error) {
-            if (!(error instanceof DOMException) || error.name !== "AbortError") {
-                throw error;
-            }
-        } finally {
-            if (state.searchController === controller) {
-                state.searchController = null;
-                setLoading(false);
-            }
-        }
-    }, 400);
+        state.currentQuery = nextQuery;
+        loadTableData();
+    }, SEARCH_DEBOUNCE_MS);
 }
 
 function setFilterMode(expiringOnly) {
     state.expiringOnly = expiringOnly;
     state.currentPage = 1;
+
     if (!state.expiringOnly) {
         state.expiringRange = "all";
     }
-    renderTable();
-    setLoading(false);
+
+    loadTableData();
 }
 
 function setExpiringRange(range) {
     state.expiringRange = range;
     state.currentPage = 1;
-    renderTable();
-    setLoading(false);
+    loadTableData();
 }
 
 function bindEvents() {
@@ -418,6 +409,7 @@ function bindEvents() {
     elements.expiringButton.addEventListener("click", () => {
         setFilterMode(true);
     });
+
     elements.rangeFilters.forEach((button) => {
         button.addEventListener("click", () => {
             if (state.expiringOnly) {
@@ -429,21 +421,21 @@ function bindEvents() {
     elements.rowsPerPage.addEventListener("change", () => {
         state.rowsPerPage = Number(elements.rowsPerPage.value);
         state.currentPage = 1;
-        renderTable();
+        loadTableData();
     });
 
     elements.prevPage.addEventListener("click", () => {
         if (state.currentPage > 1) {
             state.currentPage -= 1;
-            renderTable();
+            loadTableData();
         }
     });
 
     elements.nextPage.addEventListener("click", () => {
-        const totalPages = Math.max(1, Math.ceil(state.filteredData.length / state.rowsPerPage));
+        const totalPages = getPageCount();
         if (state.currentPage < totalPages) {
             state.currentPage += 1;
-            renderTable();
+            loadTableData();
         }
     });
 }
@@ -451,6 +443,5 @@ function bindEvents() {
 document.addEventListener("DOMContentLoaded", () => {
     state.expiringOnly = getInitialViewMode();
     bindEvents();
-    renderTable();
-    setLoading(false);
+    loadTableData();
 });

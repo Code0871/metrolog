@@ -44,8 +44,8 @@ func NewMiInstanceService(repo *repository.MiInstanceRepository) *MiInstanceServ
 //   - []models.MiInstance: список записей
 //   - int: общее количество записей в БД
 //   - error: ошибка при выполнении запроса
-func (s *MiInstanceService) GetAll(limit, offset int) ([]models.MiInstance, int, error) {
-	return s.repo.GetAll(limit, offset)
+func (s *MiInstanceService) GetAll(limit, offset int, query, expiringRange string) ([]models.MiInstance, int, error) {
+	return s.repo.GetAll(limit, offset, query, expiringRange)
 }
 
 // GetByPassport - возвращает средство измерения по его паспорту

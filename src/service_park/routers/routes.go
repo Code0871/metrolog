@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"net/http"
 	"service_park/handler"
 	"service_park/repository"
 	"service_park/service"
@@ -8,8 +9,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		headers := c.Writer.Header()
+		headers.Set("Access-Control-Allow-Origin", "*")
+		headers.Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		headers.Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		c.Next()
+	}
+}
+
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
+	router.Use(corsMiddleware())
 
 	// ============================================
 	// ИНИЦИАЛИЗАЦИЯ ХЕНДЛЕРОВ
@@ -27,6 +45,7 @@ func SetupRouter() *gin.Engine {
 	{
 		miinstance := api.Group("/miinstance")
 		{
+			miinstance.GET("", miInstanceHandler.GetAll)
 			miinstance.GET("/", miInstanceHandler.GetAll)
 			miinstance.GET("/passport", miInstanceHandler.GetByPassport)
 		}

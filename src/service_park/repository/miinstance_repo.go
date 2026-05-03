@@ -18,9 +18,12 @@ import (
 	"fmt"
 	"service_park/db"
 	"service_park/models"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
+
+const miInstanceDueDateExpr = "CASE WHEN commissioning_date IS NOT NULL AND mpi IS NOT NULL THEN commissioning_date + make_interval(months => mpi) END"
 
 type MiInstanceRepository struct{}
 
@@ -28,10 +31,43 @@ func NewMiInstanceRepository() *MiInstanceRepository {
 	return &MiInstanceRepository{}
 }
 
-// GetMiInstances - получает список всех единиц оборудования (MI) из базы данных.
-func (r *MiInstanceRepository) GetAll(limit, offset int) ([]models.MiInstance, int, error) {
+func buildMiInstanceWhereClause(query, expiringRange string) (string, []interface{}) {
+	clauses := make([]string, 0, 2)
+	args := make([]interface{}, 0, 3)
 
-	query := `
+	if query != "" {
+		likePattern := "%" + query + "%"
+		clauses = append(clauses, "(miinstance_passport ILIKE ? OR miinstance_name ILIKE ? OR miinstance_type ILIKE ?)")
+		args = append(args, likePattern, likePattern, likePattern)
+	}
+
+	if expiringRange != "" {
+		switch expiringRange {
+		case "week":
+			clauses = append(clauses, "("+miInstanceDueDateExpr+" BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '7 days')")
+		case "month":
+			clauses = append(clauses, "("+miInstanceDueDateExpr+" BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 month')")
+		case "year", "all":
+			clauses = append(clauses, "("+miInstanceDueDateExpr+" BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 year')")
+		}
+	}
+
+	if len(clauses) == 0 {
+		return "", args
+	}
+
+	return "WHERE " + strings.Join(clauses, " AND "), args
+}
+
+// GetMiInstances - получает список всех единиц оборудования (MI) из базы данных.
+func (r *MiInstanceRepository) GetAll(limit, offset int, query, expiringRange string) ([]models.MiInstance, int, error) {
+	whereClause, args := buildMiInstanceWhereClause(query, expiringRange)
+	orderByClause := "miinstance_passport"
+	if expiringRange != "" {
+		orderByClause = "COALESCE(" + miInstanceDueDateExpr + ", DATE '9999-12-31'), miinstance_passport"
+	}
+
+	selectQuery := `
 		SELECT 
 			miinstance_passport,
 			miinstance_name,
@@ -43,19 +79,21 @@ func (r *MiInstanceRepository) GetAll(limit, offset int) ([]models.MiInstance, i
 			is_fit,
 			mpi
 		FROM miinstance
-		ORDER BY miinstance_passport
-		LIMIT $1 OFFSET $2
+		` + whereClause + `
+		ORDER BY ` + orderByClause + `
+		LIMIT ? OFFSET ?
 	`
 
 	var instances []models.MiInstance
-	err := db.DB.Select(&instances, query, limit, offset)
+	selectArgs := append(append([]interface{}{}, args...), limit, offset)
+	err := db.DB.Select(&instances, db.DB.Rebind(selectQuery), selectArgs...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("query error: %w", err)
 	}
 	// Получаем общее количество записей для пагинации
 	var total int
-	countQuery := `SELECT COUNT(*) FROM miinstance`
-	err = db.DB.Get(&total, countQuery)
+	countQuery := `SELECT COUNT(*) FROM miinstance ` + whereClause
+	err = db.DB.Get(&total, db.DB.Rebind(countQuery), args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("count error: %w", err)
 	}
