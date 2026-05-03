@@ -35,3 +35,9 @@ logs/
 
 # конкретные файлы  
 data_config.yaml
+
+# Qdrant
+.qdrant_storage/
+storage/
+snapshots/
+*.qdrant

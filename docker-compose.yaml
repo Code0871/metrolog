@@ -13,7 +13,18 @@ services:
     networks:
       - metrolog_network
 
-  service_park_app:                    # ← добавить 2 пробела перед service_park_app
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    env_file: 
+      - ./src/searcher/config/.env
+    ports: 
+      - "6333:6333"
+    volumes: 
+      - qdrant_data/qdrant/storage
+    restart: unless-stopped
+
+  service_park_app:
     build: ./src/service_park
     container_name: service_park_app
     env_file:
