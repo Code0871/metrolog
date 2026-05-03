@@ -31,7 +31,7 @@ logs/
 
 # Переменные окружения
 .env
-.env.local
+!.env.example
 
 # конкретные файлы  
 data_config.yaml

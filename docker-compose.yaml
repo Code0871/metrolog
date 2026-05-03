@@ -1,6 +1,6 @@
 services:
   service_park_db:
-    image: postgres:15
+    image: postgres:17
     container_name: service_park_db
     env_file:
       - ./src/service_park/.env
@@ -8,20 +8,39 @@ services:
       - service_park_db_volume:/var/lib/postgresql/data
       - ./backup:/backup
     ports:
-      - "5432:5432"
-  
+      - "5433:5432"
+    restart: unless-stopped
+    networks:
+      - metrolog_network
+
   qdrant:
     image: qdrant/qdrant:latest
     container_name: qdrant
-    env_file: ./src/searcher/config/.env
+    env_file: 
+      - ./src/searcher/config/.env
     ports: 
       - "6333:6333"
     volumes: 
       - qdrant_data/qdrant/storage
     restart: unless-stopped
 
-  searcher:
+  service_park_app:
+    build: ./src/service_park
+    container_name: service_park_app
+    env_file:
+      - ./src/service_park/.env
+    ports:
+      - "8080:8080"
+    networks:
+      - metrolog_network
+    depends_on:
+      - service_park_db
+    restart: unless-stopped
 
+networks:
+  metrolog_network:
+    driver: bridge
+    name: metrolog_network
 
 volumes:
   service_park_db_volume:
