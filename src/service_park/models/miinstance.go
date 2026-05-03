@@ -21,15 +21,15 @@ import (
 
 // MiInstance - полная модель (соответствует таблице miinstance)
 type MiInstance struct {
-	Passport          string          `json:"passport" db:"miinstance_passport"`
-	Name              string          `json:"name" db:"miinstance_name"`
-	Type              string          `json:"type" db:"miinstance_type"`
-	StateCondition    string          `json:"state_condition" db:"miinstance_state_condition"`
-	TechCondition     string          `json:"tech_condition" db:"miinstance_tech_condition"`
-	IssueDate         *time.Time      `json:"issue_date,omitempty" db:"issue_date"`
-	CommissioningDate *time.Time      `json:"commissioning_date,omitempty" db:"commissioning_date"`
-	IsFit             bool            `json:"is_fit" db:"is_fit"`
-	MPI               types.NullInt32 `json:"mpi" db:"mpi"`
+	Passport          types.NullString `json:"passport" db:"miinstance_passport"`
+	Name              types.NullString `json:"name" db:"miinstance_name"`
+	Type              types.NullString `json:"type" db:"miinstance_type"`
+	StateCondition    types.NullString `json:"state_condition" db:"miinstance_state_condition"`
+	TechCondition     types.NullString `json:"tech_condition" db:"miinstance_tech_condition"`
+	IssueDate         *time.Time       `json:"issue_date,omitempty" db:"issue_date"`
+	CommissioningDate *time.Time       `json:"commissioning_date,omitempty" db:"commissioning_date"`
+	IsFit             types.NullBool   `json:"is_fit" db:"is_fit"`
+	MPI               types.NullInt32  `json:"mpi" db:"mpi"`
 }
 
 // Response - универсальный формат ответа API

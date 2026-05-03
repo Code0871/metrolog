@@ -28,7 +28,7 @@ func SetupRouter() *gin.Engine {
 		miinstance := api.Group("/miinstance")
 		{
 			miinstance.GET("/", miInstanceHandler.GetAll)
-			miinstance.GET("/:passport", miInstanceHandler.GetByPassport)
+			miinstance.GET("/passport", miInstanceHandler.GetByPassport)
 		}
 	}
 

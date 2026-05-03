@@ -55,6 +55,6 @@ func (s *MiInstanceService) GetAll(limit, offset int) ([]models.MiInstance, int,
 // Возвращает:
 //   - *models.MiInstance: найденная запись
 //   - error: ошибка если запись не найдена
-func (s *MiInstanceService) GetByPassport(passport string) (*models.MiInstance, error) {
-	return s.repo.GetByPassport(passport)
+func (s *MiInstanceService) GetByPassport(passport []string) ([]models.MiInstance, error) {
+	return s.repo.GetByPassports(passport)
 }

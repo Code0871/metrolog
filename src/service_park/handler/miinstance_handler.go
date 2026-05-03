@@ -19,6 +19,7 @@ import (
 	"service_park/models"
 	"service_park/service"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -84,9 +85,8 @@ func (h *MIInstanceHandler) GetAll(c *gin.Context) {
 }
 
 func (h *MIInstanceHandler) GetByPassport(c *gin.Context) {
-	passport := c.Param("passport")
-
-	if passport == "" {
+	passportsStr := c.Query("idx")
+	if passportsStr == "" {
 		c.JSON(http.StatusBadRequest, models.Response{
 			Success: false,
 			Error:   "Passport parameter is required",
@@ -94,8 +94,11 @@ func (h *MIInstanceHandler) GetByPassport(c *gin.Context) {
 		return
 	}
 
-	instance, err := h.service.GetByPassport(passport)
+	// Разделяем строку по запятой
+	passports := strings.Split(passportsStr, ",")
 
+	// Вызываем метод для нескольких паспортов
+	instances, err := h.service.GetByPassport(passports)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.Response{
 			Success: false,
@@ -104,9 +107,17 @@ func (h *MIInstanceHandler) GetByPassport(c *gin.Context) {
 		return
 	}
 
+	if len(instances) == 0 {
+		c.JSON(http.StatusNotFound, models.Response{
+			Success: false,
+			Error:   "No records found for passports: " + passportsStr,
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, models.Response{
 		Success: true,
-		Data:    instance,
+		Data:    instances,
+		Total:   len(instances),
 	})
-
 }

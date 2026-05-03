@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"service_park/db"
 	"service_park/models"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type MiInstanceRepository struct{}
@@ -61,9 +63,13 @@ func (r *MiInstanceRepository) GetAll(limit, offset int) ([]models.MiInstance, i
 	return instances, total, nil
 }
 
-// GetByPassport - получает полную информацию о средстве измерения по паспорту
-func (r *MiInstanceRepository) GetByPassport(passport string) (*models.MiInstance, error) {
-	query := `
+// GetByPassports - получает список по нескольким паспортам
+func (r *MiInstanceRepository) GetByPassports(passports []string) ([]models.MiInstance, error) {
+	if len(passports) == 0 {
+		return []models.MiInstance{}, nil
+	}
+
+	query, args, err := sqlx.In(`
 		SELECT 
 			miinstance_passport,
 			miinstance_name,
@@ -75,13 +81,20 @@ func (r *MiInstanceRepository) GetByPassport(passport string) (*models.MiInstanc
 			is_fit,
 			mpi
 		FROM miinstance
-		WHERE miinstance_passport = $1
-	`
-	var instance models.MiInstance
-	err := db.DB.Get(&instance, query, passport)
+		WHERE miinstance_passport IN (?)
+	`, passports)
+
+	if err != nil {
+		return nil, fmt.Errorf("sqlx.In error: %w", err)
+	}
+
+	query = db.DB.Rebind(query)
+
+	var instances []models.MiInstance
+	err = db.DB.Select(&instances, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("query error: %w", err)
 	}
 
-	return &instance, nil
+	return instances, nil
 }
