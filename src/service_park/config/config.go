@@ -23,15 +23,6 @@ func LoadConfig() *Config {
 		log.Println("No .env file found, using system environment variables")
 	}
 
-	// Отладка: выводим все переменные
-	log.Println("Loading config...")
-	log.Printf("POSTGRES_HOST=%s", os.Getenv("POSTGRES_HOST"))
-	log.Printf("POSTGRES_USER=%s", os.Getenv("POSTGRES_USER"))
-	log.Printf("POSTGRES_PASSWORD=%s", os.Getenv("POSTGRES_PASSWORD"))
-	log.Printf("POSTGRES_DB=%s", os.Getenv("POSTGRES_DB"))
-	log.Printf("SERVER_PORT=%s", os.Getenv("SERVER_PORT"))
-	log.Printf("GIN_MODE=%s", os.Getenv("GIN_MODE"))
-
 	return &Config{
 		DBHost:     getEnv("POSTGRES_HOST", "localhost"),
 		DBPort:     getEnv("POSTGRES_PORT", "5432"),
