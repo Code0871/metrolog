@@ -12,29 +12,56 @@ services:
     restart: unless-stopped
     networks:
       - metrolog_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   qdrant:
     image: qdrant/qdrant:latest
     container_name: qdrant
-    env_file: 
-      - ./src/searcher/config/.env
-    ports: 
+    ports:
       - "6333:6333"
-    volumes: 
-      - qdrant_data/qdrant/storage
+    volumes:
+      - qdrant_data:/qdrant/storage
     restart: unless-stopped
+    networks:
+      - metrolog_network
 
   service_park_app:
     build: ./src/service_park
     container_name: service_park_app
     env_file:
       - ./src/service_park/.env
+    environment:
+      POSTGRES_HOST: service_park_db
+      POSTGRES_PORT: 5432
     ports:
       - "8080:8080"
     networks:
       - metrolog_network
     depends_on:
-      - service_park_db
+      service_park_db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ========== NGINX ДЛЯ ФРОНТЕНДА ==========
+  nginx:
+    image: nginx:alpine
+    container_name: metrolog_nginx
+    ports:
+      - "80:80"           # HTTP
+      - "443:443"         # HTTPS (опционально, если будет SSL)
+    volumes:
+      # Монтируем конфиг NGINX
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Монтируем статические файлы фронтенда
+      - ./src/web_site:/usr/share/nginx/html:ro
+    networks:
+      - metrolog_network
+    depends_on:
+      - service_park_app
     restart: unless-stopped
 
 networks:
@@ -44,3 +71,4 @@ networks:
 
 volumes:
   service_park_db_volume:
+  qdrant_data:
