@@ -25,7 +25,7 @@ func MustInitQdrantСlient(ctx context.Context, host string, port int) *qdrant.C
 	return cli
 }
 
-func MustInitQdrantCollections(client *qdrant.Client, collection_name string, vec_size uint64, distance_type qdrant.Distance) {
+func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec_size uint64, distance_type qdrant.Distance) {
 	err := client.CreateCollection(context.Background(), &qdrant.CreateCollection{
 		CollectionName: collection_name,
 		VectorsConfig: qdrant.NewVectorsConfig(&qdrant.VectorParams{
