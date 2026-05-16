@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "embedding-service"
+version = "1.0.0"
+description = "Сервис для скачивания и конвертации модели эмбеддингов в ONNX"
+
+dependencies = [
+    "sentence-transformers>=2.2.0,<3.0.0",
+    "torch>=2.0.0",
+    "transformers>=4.36.0",
+    "huggingface-hub>=0.20.0",
+    "numpy>=1.24.0,<2.0.0",
+    "optimum>=1.17.0",
+    "onnxruntime>=1.16.0",  # ONNX Runtime
+    "python-dotenv>=1.0.0",  # Для загрузки .env файлов
+    "onnx>=1.15.0",  # Базовый ONNX пакет
+]
+
+[project.optional-dependencies]
+gpu = [
+    "torch>=2.0.0+cu118",  # CUDA 11.8 версия
+    "onnxruntime-gpu>=1.16.0",  # GPU версия ONNX Runtime
+]
+
+# Для оптимизации моделей
+optimum = [
+    "optimum[onnxruntime]>=1.17.0",  # Полная поддержка ONNX
+]
