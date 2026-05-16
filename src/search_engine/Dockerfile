@@ -1,2 +1,2 @@
 ## пока что пусто
-from golang:1.26.2
+FROM golang:1.26.2
