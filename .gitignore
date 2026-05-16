@@ -38,3 +38,8 @@ logs/
 storage/
 snapshots/
 *.qdrant
+
+# AI
+.onnx
+model/
+onnx_model/

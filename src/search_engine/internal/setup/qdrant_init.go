@@ -26,7 +26,7 @@ func MustInitQdrantСlient(host string, port int) *qdrant.Client {
 	return cli
 }
 
-// TODO: можно сделать передачу параметров для построения индексов читая их настройки из конфига
+// TODO: можно сделать передачу параметров для настройки Hnsw из конфига
 // инициализация коллекции
 func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec_size uint64, distance_type qdrant.Distance) {
 
@@ -38,7 +38,7 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 			}
 		}
 
-		fmt.Println("Collection not found")
+		fmt.Println("Collections not found")
 	}
 
 	m := uint64(16)
