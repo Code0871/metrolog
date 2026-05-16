@@ -21,9 +21,14 @@ type CollectionConfig struct {
 	QdrantVectorSize   int
 }
 
+type ModelConfig struct {
+	ModelName string
+}
+
 type Config struct {
 	QdrantConfigs    QdrantConfig
 	CollectionConfig CollectionConfig
+	ModelConfig      ModelConfig
 }
 
 func MustLoadConfig() *Config {
@@ -44,6 +49,9 @@ func MustLoadConfig() *Config {
 			CollectionName:     getEnv("collection_name", "miinstance_park"),
 			QdrantDistanceType: QdrantDistanceConverter(getEnv("qdrant_distance_type", "Cosine")),
 			QdrantVectorSize:   getEnvAsInt("qdrant_vector_size", 768),
+		},
+		ModelConfig: ModelConfig{
+			ModelName: getEnv("model_from_hugging_face", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
 		},
 	}
 }
