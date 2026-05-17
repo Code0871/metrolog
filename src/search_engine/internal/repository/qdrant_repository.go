@@ -13,11 +13,11 @@ import (
 type QdrantRepository interface {
 	// CRUD операции
 	Upsert(ctx context.Context, collection_name string, vector []float32, passport, name, mi_type string) error
-	Get(ctx context.Context, collection_name string, ids []uint64) ([]*qdrant.PointStruct, error)
 	Delete(ctx context.Context, collection_name string, ids []uint64) error
 
 	// Поиск
-	Search(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error)
+	FindNearest(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error)
+	//Search(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error)
 	SearchWithFilter(ctx context.Context, collection_name string, vector []float32, filter *qdrant.Filter) ([]*qdrant.ScoredPoint, error)
 
 	Close() error
@@ -56,8 +56,19 @@ func (qr *qdrantRepository) Upsert(ctx context.Context, collection_name string, 
 	return nil
 }
 
-func (qr *qdrantRepository) Get(ctx context.Context, collection_name string, ids []uint64) ([]*qdrant.PointStruct, error) {
-	return nil, nil
+func (qr *qdrantRepository) FindNearest(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error) {
+	search_result, err := qr.client.Query(ctx, &qdrant.QueryPoints{
+		CollectionName: collection_name,
+		Query:          qdrant.NewQuery(vector...),
+		WithPayload:    qdrant.NewWithPayload(true),
+		WithVectors:    qdrant.NewWithVectors(true),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return search_result, nil
 }
 
 func (qr *qdrantRepository) Delete(ctx context.Context, collection_name string, ids []uint64) error {
@@ -65,12 +76,17 @@ func (qr *qdrantRepository) Delete(ctx context.Context, collection_name string, 
 
 }
 
-func (qr *qdrantRepository) Search(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error) {
-	return nil, nil
-}
-
 func (qr *qdrantRepository) SearchWithFilter(ctx context.Context, collection_name string, vector []float32, filter *qdrant.Filter) ([]*qdrant.ScoredPoint, error) {
-	return nil, nil
+	search_result, err := qr.client.Query(ctx, &qdrant.QueryPoints{
+		CollectionName: collection_name,
+		Query:          qdrant.NewQuery(vector...),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return search_result, nil
 }
 
 func (qr *qdrantRepository) Close() error {
