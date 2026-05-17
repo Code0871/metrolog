@@ -4,8 +4,6 @@ import (
 	"context"
 	"search_engine/config"
 
-	"search_engine/internal/model"
-
 	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
 )
@@ -14,12 +12,12 @@ import (
 
 type QdrantRepository interface {
 	// CRUD операции
-	Upsert(ctx context.Context, collection_name string, instances *model.Miinstance) error
+	Upsert(ctx context.Context, collection_name string, vector []float32, passport, name, mi_type string) error
 	Get(ctx context.Context, collection_name string, ids []uint64) ([]*qdrant.PointStruct, error)
 	Delete(ctx context.Context, collection_name string, ids []uint64) error
 
 	// Поиск
-	Search(ctx context.Context, collection_name string, vector []float32, limit int) ([]*qdrant.ScoredPoint, error)
+	Search(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error)
 	SearchWithFilter(ctx context.Context, collection_name string, vector []float32, filter *qdrant.Filter) ([]*qdrant.ScoredPoint, error)
 
 	Close() error
@@ -41,7 +39,7 @@ func (qr *qdrantRepository) Upsert(ctx context.Context, collection_name string, 
 		CollectionName: collection_name,
 		Points: []*qdrant.PointStruct{
 			{
-				Id:      &qdrant.PointId{PointIdOptions: &qdrant.PointId_Uuid{Uuid: uuid.New().String()}},
+				Id:      qdrant.NewID(uuid.New().String()),
 				Vectors: &qdrant.Vectors{VectorsOptions: &qdrant.Vectors_Vector{Vector: &qdrant.Vector{Data: vector}}},
 				Payload: qdrant.NewValueMap(map[string]any{
 					"passport": passport,
@@ -56,23 +54,23 @@ func (qr *qdrantRepository) Upsert(ctx context.Context, collection_name string, 
 	}
 
 	return nil
-
 }
 
 func (qr *qdrantRepository) Get(ctx context.Context, collection_name string, ids []uint64) ([]*qdrant.PointStruct, error) {
-
+	return nil, nil
 }
 
 func (qr *qdrantRepository) Delete(ctx context.Context, collection_name string, ids []uint64) error {
+	return nil
 
 }
 
-func (qr *qdrantRepository) Search(ctx context.Context, collection_name string, vector []float64) ([]*qdrant.ScoredPoint, error) {
-
+func (qr *qdrantRepository) Search(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error) {
+	return nil, nil
 }
 
 func (qr *qdrantRepository) SearchWithFilter(ctx context.Context, collection_name string, vector []float32, filter *qdrant.Filter) ([]*qdrant.ScoredPoint, error) {
-
+	return nil, nil
 }
 
 func (qr *qdrantRepository) Close() error {
