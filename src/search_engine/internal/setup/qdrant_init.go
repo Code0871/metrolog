@@ -30,34 +30,48 @@ func MustInitQdrantСlient(host string, port int) *qdrant.Client {
 // инициализация коллекции
 func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec_size uint64, distance_type qdrant.Distance) {
 
-	if collections, err := client.ListCollections(context.Background()); err == nil {
-		for _, val := range collections {
-			if val == collection_name {
-				fmt.Println("Collection already exists")
-				return
-			}
-		}
-
-		fmt.Println("Collections not found")
+	// Проверяем, что клиент существует
+	if client == nil {
+		panic("qdrant client is nil")
 	}
 
-	m := uint64(16)
-	efconstruction := uint64(100)
-	fullscanthreshhold := uint64(10000)
-	ondisk := true
-	payloadm := uint64(100)
+	// Проверяем, что коллецкция с заданным именем не существует
+	collection, err := client.CollectionExists(context.Background(), collection_name)
+	if err != nil {
+		panic(err)
+	}
+	if collection {
+		fmt.Printf("Collection '%s' already exists\n", collection_name)
+		return
+	}
 
-	err := client.CreateCollection(context.Background(), &qdrant.CreateCollection{
+	// параметры Hnsw
+	// параметры Hnsw
+	m := uint64(16)
+	ef_construction := uint64(100)
+	full_scan_threshold := uint64(10000)
+	on_disk := true
+	payload_m := uint64(100)
+
+	// параметры вакуумного оптимизатора
+	delete_threshold := float64(0.2)
+	vacuum_min_vector_number := uint64(500)
+
+	err = client.CreateCollection(context.Background(), &qdrant.CreateCollection{
 		CollectionName: collection_name,
+		OptimizersConfig: &qdrant.OptimizersConfigDiff{
+			DeletedThreshold:      &delete_threshold,
+			VacuumMinVectorNumber: &vacuum_min_vector_number,
+		},
 		VectorsConfig: qdrant.NewVectorsConfig(&qdrant.VectorParams{
 			Size:     vec_size,
 			Distance: distance_type,
 			HnswConfig: &qdrant.HnswConfigDiff{
 				M:                 &m,
-				EfConstruct:       &efconstruction,
-				FullScanThreshold: &fullscanthreshhold,
-				OnDisk:            &ondisk,
-				PayloadM:          &payloadm,
+				EfConstruct:       &ef_construction,
+				FullScanThreshold: &full_scan_threshold,
+				OnDisk:            &on_disk,
+				PayloadM:          &payload_m,
 			},
 		}),
 	})
