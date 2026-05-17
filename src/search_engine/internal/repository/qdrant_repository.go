@@ -42,7 +42,7 @@ func (qr *qdrantRepository) Upsert(ctx context.Context, collection_name string, 
 		Points: []*qdrant.PointStruct{
 			{
 				Id:      &qdrant.PointId{PointIdOptions: &qdrant.PointId_Uuid{Uuid: uuid.New().String()}},
-				Vectors: &qdrant.Vectors{VectorsOptions: &qdrant.Vectors_Vector{&qdrant.Vector{Data: vector}}},
+				Vectors: &qdrant.Vectors{VectorsOptions: &qdrant.Vectors_Vector{Vector: &qdrant.Vector{Data: vector}}},
 				Payload: qdrant.NewValueMap(map[string]any{
 					"passport": passport,
 					"name":     name,
