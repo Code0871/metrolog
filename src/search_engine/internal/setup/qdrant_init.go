@@ -26,13 +26,12 @@ func MustInitQdrantСlient(host string, port int) *qdrant.Client {
 	return cli
 }
 
-// TODO: можно сделать передачу параметров для настройки Hnsw из конфига
 // инициализация коллекции
 func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec_size uint64, distance_type qdrant.Distance) {
 
 	// Проверяем, что клиент существует
 	if client == nil {
-		panic("qdrant client is nil")
+		panic("qdrant client is not exists")
 	}
 
 	// Проверяем, что коллецкция с заданным именем не существует
@@ -45,7 +44,6 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 		return
 	}
 
-	// параметры Hnsw
 	// параметры Hnsw
 	m := uint64(16)
 	ef_construction := uint64(100)
