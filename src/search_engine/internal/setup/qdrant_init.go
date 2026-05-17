@@ -26,7 +26,7 @@ func MustInitQdrantСlient(host string, port int) *qdrant.Client {
 	return cli
 }
 
-// инициализация коллекции
+// инициализация коллекции для гибридного поиска
 func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec_size uint64, distance_type qdrant.Distance) {
 
 	// Проверяем, что клиент существует
@@ -44,9 +44,8 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 		return
 	}
 
-	// параметры Hnsw
 	m := uint64(16)
-	ef_construction := uint64(100)
+	ef_construct := uint64(100)
 	full_scan_threshold := uint64(10000)
 	on_disk := true
 	payload_m := uint64(100)
@@ -61,19 +60,38 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 			DeletedThreshold:      &delete_threshold,
 			VacuumMinVectorNumber: &vacuum_min_vector_number,
 		},
-		VectorsConfig: qdrant.NewVectorsConfig(&qdrant.VectorParams{
-			Size:     vec_size,
-			Distance: distance_type,
-			HnswConfig: &qdrant.HnswConfigDiff{
-				M:                 &m,
-				EfConstruct:       &ef_construction,
-				FullScanThreshold: &full_scan_threshold,
-				OnDisk:            &on_disk,
-				PayloadM:          &payload_m,
+		VectorsConfig: qdrant.NewVectorsConfigMap(
+			map[string]*qdrant.VectorParams{
+				"dense": {
+					Size:     vec_size,
+					Distance: distance_type,
+					HnswConfig: &qdrant.HnswConfigDiff{
+						M:                 &m,
+						EfConstruct:       &ef_construct,
+						FullScanThreshold: &full_scan_threshold,
+						OnDisk:            &on_disk,
+						PayloadM:          &payload_m,
+					},
+				},
+
+				"multi": {
+					Size:     96,
+					Distance: qdrant.Distance_Cosine,
+					MultivectorConfig: &qdrant.MultiVectorConfig{
+						Comparator: qdrant.MultiVectorComparator_MaxSim,
+					},
+					HnswConfig: &qdrant.HnswConfigDiff{M: qdrant.PtrOf(uint64(0))},
+				},
+			}),
+		SparseVectorsConfig: qdrant.NewSparseVectorsConfig(
+			map[string]*qdrant.SparseVectorParams{
+				"sparse": {Modifier: qdrant.Modifier_Idf.Enum()},
 			},
-		}),
+		),
 	})
 	if err != nil {
 		panic(err)
 	}
 }
+
+//csvUrl := ""

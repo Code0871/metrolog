@@ -34,6 +34,7 @@ func NewQdrantRepository(client *qdrant.Client, config *config.Config) QdrantRep
 	}
 }
 
+// функция добавления вектора в коллекцию
 func (qr *qdrantRepository) Upsert(ctx context.Context, collection_name string, vector []float32, passport, name, mi_type string) error {
 	_, err := qr.client.Upsert(ctx, &qdrant.UpsertPoints{
 		CollectionName: collection_name,
@@ -56,12 +57,14 @@ func (qr *qdrantRepository) Upsert(ctx context.Context, collection_name string, 
 	return nil
 }
 
+// функция поиска ближайших векторов
 func (qr *qdrantRepository) FindNearest(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error) {
 	search_result, err := qr.client.Query(ctx, &qdrant.QueryPoints{
 		CollectionName: collection_name,
 		Query:          qdrant.NewQuery(vector...),
 		WithPayload:    qdrant.NewWithPayload(true),
 		WithVectors:    qdrant.NewWithVectors(true),
+		Limit:          qdrant.PtrOf(uint64(50)),
 	})
 
 	if err != nil {
@@ -73,13 +76,16 @@ func (qr *qdrantRepository) FindNearest(ctx context.Context, collection_name str
 
 func (qr *qdrantRepository) Delete(ctx context.Context, collection_name string, ids []uint64) error {
 	return nil
-
 }
 
 func (qr *qdrantRepository) SearchWithFilter(ctx context.Context, collection_name string, vector []float32, filter *qdrant.Filter) ([]*qdrant.ScoredPoint, error) {
 	search_result, err := qr.client.Query(ctx, &qdrant.QueryPoints{
 		CollectionName: collection_name,
 		Query:          qdrant.NewQuery(vector...),
+		WithPayload:    qdrant.NewWithPayload(true),
+		WithVectors:    qdrant.NewWithVectors(true),
+		Filter:         filter,
+		Limit:          qdrant.PtrOf(uint64(50)),
 	})
 
 	if err != nil {
