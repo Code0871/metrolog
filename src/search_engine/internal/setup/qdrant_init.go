@@ -48,7 +48,7 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 	m := uint64(16)
 	ef_construct := uint64(100)
 	full_scan_threshold := uint64(10000)
-	on_disk := true
+	on_disk := false
 	payload_m := uint64(100)
 
 	// параметры вакуумного оптимизатора
@@ -74,7 +74,6 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 						PayloadM:          &payload_m,
 					},
 				},
-
 				"multi": {
 					Size:     96,
 					Distance: qdrant.Distance_Cosine,
