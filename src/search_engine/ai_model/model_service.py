@@ -7,6 +7,7 @@ import numpy as np
 import pickle
 from dotenv import load_dotenv
 import pathlib
+from fastembed import LateInteractionTextEmbedding
 
 env_path = pathlib.Path(__file__).parents[1] / 'config' / 'config.env'
 load_dotenv(env_path)
@@ -45,10 +46,8 @@ else:
     logger.info("Dummy BM25 index created")
 
 logger.info("Loading late interaction model...")
-late_model = SentenceTransformer(
-    "answerdotai/answerai-colbert-small-v1",
-    device="cpu"
-)
+late_model = SentenceTransformer("answerdotai/answerai-colbert-small-v1")
+
 logger.info("Late interaction model loaded")
 
 def batch_generator(texts, batch_size):
@@ -131,7 +130,6 @@ def embed_sparse():
                 'values': values
             })
         
-        # Возвращаем одиночный sparse embedding если был один текст
         if 'text' in data:
             return jsonify(sparse_embeddings[0])
         else:
@@ -160,19 +158,19 @@ def embed_late():
                 'error': f'Batch size exceeds maximum allowed ({MAX_BATCH_SIZE})'
             }), 400
         
-        # Batch encoding для late interaction
-        embeddings = late_model.encode(
-            texts,
-            batch_size=BATCH_SIZE,
-            normalize_embeddings=True,
-            show_progress_bar=False
-        )
+        multi_vectors = []
+        for text in texts:
+            token_embeddings = late_model.encode(
+                text, 
+                output_value='token_embeddings',
+                normalize_embeddings=True
+            )
+            multi_vectors.append(token_embeddings.tolist())
         
-        # Возвращаем одиночный embedding если был один текст, иначе массив
         if 'text' in data:
-            return jsonify({'embedding': embeddings[0].tolist()})
+            return jsonify({'multi_vector': multi_vectors[0]})
         else:
-            return jsonify({'embeddings': embeddings.tolist()})
+            return jsonify({'multi_vectors': multi_vectors})
             
     except Exception as e:
         logger.error(f"Error in late embedding: {e}")
