@@ -22,7 +22,9 @@ type CollectionConfig struct {
 }
 
 type ModelConfig struct {
-	ModelName string
+	DenseModelName           string
+	SparseModelName          string
+	LateInteractionModelName string
 }
 
 type Config struct {
@@ -51,7 +53,9 @@ func MustLoadConfig() *Config {
 			QdrantVectorSize:   getEnvAsInt("qdrant_vector_size", 768),
 		},
 		ModelConfig: ModelConfig{
-			ModelName: getEnv("model_from_hugging_face", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
+			DenseModelName:           getEnv("dense_embedding_model", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
+			SparseModelName:          getEnv("sparse_model", "qdrant/bm25"),
+			LateInteractionModelName: getEnv("late_interacction_embeding_model", "answerdotai/answerai-colbert-small-v1"),
 		},
 	}
 }
