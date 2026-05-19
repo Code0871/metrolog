@@ -19,10 +19,15 @@ type QdrantRepository interface {
 	GetPoints(ctx context.Context, collection_name string, ids []string) ([]*qdrant.RetrievedPoint, error)
 	Delete(ctx context.Context, collection_name string, passport string) error
 
+	GetNearestPointsDense(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error)
+	GetNearestPointsSparse(ctx context.Context, collection_name string, indicies []uint32, value []float32) ([]*qdrant.ScoredPoint, error)
+	GetNearestPointsHybrid(ctx context.Context, collection_name string, dense_vector []float32, indicies []uint32, sparse_value []float32, multi_vector [][]float32) ([]*qdrant.ScoredPoint, error)
+
 	// Поиск
 	FindNearest(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error)
 	SearchWithFilter(ctx context.Context, collection_name string, vector []float32, filter *qdrant.Filter) ([]*qdrant.ScoredPoint, error)
 
+	// Закрытие соединения
 	Close() error
 }
 
@@ -167,6 +172,69 @@ func (qr *qdrantRepository) SearchWithFilter(ctx context.Context, collection_nam
 	}
 
 	return search_result, nil
+}
+
+// Находим вектора ближайших точек по семантике
+func (qr *qdrantRepository) GetNearestPointsDense(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error) {
+	if len(vector) == 0 {
+		return nil, nil
+	}
+
+	results, err := qr.client.Query(ctx, &qdrant.QueryPoints{
+		CollectionName: collection_name,
+		Query:          qdrant.NewQueryDense(vector),
+		Using:          qdrant.PtrOf("dense"),
+		WithPayload:    qdrant.NewWithPayload(true),
+		Limit:          qdrant.PtrOf(uint64(50)),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (qr *qdrantRepository) GetNearestPointsSparse(ctx context.Context, collection_name string, indicies []uint32, value []float32) ([]*qdrant.ScoredPoint, error) {
+
+	results, err := qr.client.Query(ctx, &qdrant.QueryPoints{
+		CollectionName: collection_name,
+		Query:          qdrant.NewQuerySparse(indicies, value),
+		Using:          qdrant.PtrOf("sparse"),
+		WithPayload:    qdrant.NewWithPayload(true),
+		Limit:          qdrant.PtrOf(uint64(50)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (qr *qdrantRepository) GetNearestPointsHybrid(ctx context.Context, collection_name string, dense_vector []float32, indicies []uint32, sparse_value []float32, multi_vector [][]float32) ([]*qdrant.ScoredPoint, error) {
+
+	results, err := qr.client.Query(ctx, &qdrant.QueryPoints{
+		CollectionName: collection_name,
+		Prefetch: []*qdrant.PrefetchQuery{
+			{
+				Query: qdrant.NewQueryDense(dense_vector),
+				Using: qdrant.PtrOf("dense"),
+				Limit: qdrant.PtrOf(uint64(50)),
+			},
+			{
+				Query: qdrant.NewQuerySparse(indicies, sparse_value),
+				Using: qdrant.PtrOf("sparse"),
+				Limit: qdrant.PtrOf(uint64(50)),
+			},
+		},
+		Query:       qdrant.NewQueryMulti(multi_vector),
+		Using:       qdrant.PtrOf("multi"),
+		WithPayload: qdrant.NewWithPayload(true),
+		Limit:       qdrant.PtrOf(uint64(50)),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
 }
 
 func (qr *qdrantRepository) Close() error {
