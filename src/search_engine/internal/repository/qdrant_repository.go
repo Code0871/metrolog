@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"search_engine/config"
 
 	"fmt"
 	"log"
@@ -32,7 +31,7 @@ type qdrantRepository struct {
 	client *qdrant.Client
 }
 
-func NewQdrantRepository(client *qdrant.Client, config *config.Config) QdrantRepository {
+func NewQdrantRepository(client *qdrant.Client) QdrantRepository {
 	return &qdrantRepository{
 		client: client,
 	}

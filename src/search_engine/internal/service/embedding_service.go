@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"search_engine/config"
 	"search_engine/internal/model"
 )
 
@@ -15,11 +16,13 @@ type EmbeddingService struct {
 	apiURL string
 }
 
-// type EmbeddingProvider interface {
-// 	GetEmbeddingDense(ctx context.Context, texts []string) ([]model.DenseVector, error)
-// 	GetEmbeddingSparse(ctx context.Context, texts []string) ([]model.SparseVector, error)
-// 	GetEmbeddingLate(ctx context.Context, texts []string) ([]model.MultiVector, error)
-// }
+func NewEmbeddingService() *EmbeddingService {
+	cfg := config.MustLoadConfig()
+	return &EmbeddingService{
+		client: &http.Client{},
+		apiURL: cfg.EmbeddingServiceConfigs.EmbeddingServiceURL(),
+	}
+}
 
 func (es *EmbeddingService) GetEmbeddingDense(ctx context.Context, texts []string) ([]model.DenseVector, error) {
 	if len(texts) == 0 {
