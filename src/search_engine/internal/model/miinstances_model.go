@@ -51,3 +51,9 @@ type BatchPointRequest struct {
 type BatchPointResponse struct {
 	Points []PointResponse `json:"points"`
 }
+
+type HybridSearchRequest struct {
+    DenseVector  []float32 `json:"dense_vector"`
+    SparseVector SparseVector `json:"sparse_vector"`
+    MultiVector  [][]float32 `json:"multi_vector"`
+}

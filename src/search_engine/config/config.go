@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -21,16 +22,15 @@ type CollectionConfig struct {
 	QdrantVectorSize   int
 }
 
-type ModelConfig struct {
-	DenseModelName           string
-	SparseModelName          string
-	LateInteractionModelName string
+type EmbeddingServiceConfig struct {
+	ServiceHost string
+	ServicePort int
 }
 
 type Config struct {
-	QdrantConfigs    QdrantConfig
-	CollectionConfig CollectionConfig
-	ModelConfig      ModelConfig
+	QdrantConfigs           QdrantConfig
+	CollectionConfigs       CollectionConfig
+	EmbeddingServiceConfigs EmbeddingServiceConfig
 }
 
 func MustLoadConfig() *Config {
@@ -47,15 +47,14 @@ func MustLoadConfig() *Config {
 			QdrantHost: getEnv("qdrant_host", "localhost"),
 			QdrantPort: getEnvAsInt("qdrant_port_grpc", 6334),
 		},
-		CollectionConfig: CollectionConfig{
+		CollectionConfigs: CollectionConfig{
 			CollectionName:     getEnv("collection_name", "miinstance_park"),
 			QdrantDistanceType: QdrantDistanceConverter(getEnv("qdrant_distance_type", "Cosine")),
 			QdrantVectorSize:   getEnvAsInt("qdrant_vector_size", 768),
 		},
-		ModelConfig: ModelConfig{
-			DenseModelName:           getEnv("dense_embedding_model", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"),
-			SparseModelName:          getEnv("sparse_model", "qdrant/bm25"),
-			LateInteractionModelName: getEnv("late_interacction_embeding_model", "answerdotai/answerai-colbert-small-v1"),
+		EmbeddingServiceConfigs: EmbeddingServiceConfig{
+			ServiceHost: getEnv("HOST", "localhost"),
+			ServicePort: getEnvAsInt("PORT", 8000),
 		},
 	}
 }
@@ -90,4 +89,8 @@ func QdrantDistanceConverter(distance_type string) qdrant.Distance {
 	default:
 		panic("unknown distance type")
 	}
+}
+
+func (c *EmbeddingServiceConfig) EmbeddingServiceURL() string {
+	return fmt.Sprintf("http://%s:%d", c.ServiceHost, c.ServicePort)
 }

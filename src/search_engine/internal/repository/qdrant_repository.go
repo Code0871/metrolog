@@ -23,10 +23,6 @@ type QdrantRepository interface {
 	GetNearestPointsSparse(ctx context.Context, collection_name string, indicies []uint32, value []float32) ([]*qdrant.ScoredPoint, error)
 	GetNearestPointsHybrid(ctx context.Context, collection_name string, dense_vector []float32, indicies []uint32, sparse_value []float32, multi_vector [][]float32) ([]*qdrant.ScoredPoint, error)
 
-	// Поиск
-	FindNearest(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error)
-	SearchWithFilter(ctx context.Context, collection_name string, vector []float32, filter *qdrant.Filter) ([]*qdrant.ScoredPoint, error)
-
 	// Закрытие соединения
 	Close() error
 }
@@ -119,24 +115,6 @@ func (qr *qdrantRepository) GetPoints(ctx context.Context, collection_name strin
 	return retrieved_points, nil
 }
 
-// функция поиска ближайших векторов
-func (qr *qdrantRepository) FindNearest(ctx context.Context, collection_name string, vector []float32) ([]*qdrant.ScoredPoint, error) {
-	search_result, err := qr.client.Query(ctx, &qdrant.QueryPoints{
-		CollectionName: collection_name,
-		Query:          qdrant.NewQuery(vector...),
-		WithPayload:    qdrant.NewWithPayload(true),
-		WithVectors:    qdrant.NewWithVectors(true),
-		Limit:          qdrant.PtrOf(uint64(50)),
-	})
-
-	if err != nil {
-		log.Printf("Ошибка поиска: %v", err)
-		return nil, err
-	}
-
-	return search_result, nil
-}
-
 // Функция удаления точки по совпадению паспорта СИ в payload'е
 func (qr *qdrantRepository) Delete(ctx context.Context, collection_name string, passport string) error {
 	_, err := qr.client.Delete(ctx, &qdrant.DeletePoints{
@@ -155,23 +133,6 @@ func (qr *qdrantRepository) Delete(ctx context.Context, collection_name string, 
 		return err
 	}
 	return nil
-}
-
-func (qr *qdrantRepository) SearchWithFilter(ctx context.Context, collection_name string, vector []float32, filter *qdrant.Filter) ([]*qdrant.ScoredPoint, error) {
-	search_result, err := qr.client.Query(ctx, &qdrant.QueryPoints{
-		CollectionName: collection_name,
-		Query:          qdrant.NewQuery(vector...),
-		WithPayload:    qdrant.NewWithPayload(true),
-		WithVectors:    qdrant.NewWithVectors(true),
-		Filter:         filter,
-		Limit:          qdrant.PtrOf(uint64(50)),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return search_result, nil
 }
 
 // Находим вектора ближайших точек по семантике
