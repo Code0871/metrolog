@@ -185,9 +185,68 @@ def health():
         'max_batch_size': MAX_BATCH_SIZE
     })
 
+# создаем индекс для BM25, елсли его нет, иначе обновляем
+@app.route('/update_index', methods=["POST"])
+def update_index():
+    global bm25_index_path, bm25_index
+    data = request.json
+    new_corpus = data['miinstance_name']
+    
+    # Проверка, что новые данные не пустые
+    if not new_corpus:
+        return {"error": "Нет данных для добавления"}, 400
+    
+    # Если это строка - превращаем в список
+    if isinstance(new_corpus, str):
+        new_corpus = [new_corpus]
+    
+    # Если индекс не существует - создаём с нуля
+    if not os.path.exists(bm25_index_path):
+        tokenized = [doc.lower().split() for doc in new_corpus]
+        bm25 = BM25Okapi(tokenized)
+        
+        with open(bm25_index_path, 'wb') as f:
+            pickle.dump({'index': bm25, 'corpus': new_corpus}, f)
+        bm25_index = bm25
+        
+        return {
+            "message": "Индекс создан", 
+            "documents_count": len(new_corpus)
+        }, 200
+    
+    # Индекс существует - обновляем
+    else:
+        bm25_index_path = 'bm25_index.pkl'
+        with open(bm25_index_path, 'rb') as f:
+            saved = pickle.load(f)
+            existing_corpus = saved.get('corpus', [])
+        
+        # Объединяем старые и новые документы
+        full_corpus = existing_corpus + new_corpus
+        
+        # Пересоздаём индекс с нуля
+        tokenized_corpus = [doc.lower().split() for doc in full_corpus]
+        bm25 = BM25Okapi(tokenized_corpus)
+        
+        # Сохраняем
+        with open(bm25_index_path, 'wb') as f:
+            pickle.dump({
+                'index': bm25, 
+                'corpus': full_corpus
+            }, f)
+        
+        bm25_index = bm25
+        
+        return {
+            "message": "Индекс обновлён",
+            "previous_count": len(existing_corpus),
+            "added_count": len(new_corpus),
+            "total_count": len(full_corpus)
+        }, 200
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8000))
     host = os.getenv('HOST', '0.0.0.0')
     logger.info(f"Starting embedding service on {host}:{port}")
     logger.info(f"Batch size: {BATCH_SIZE}, Max batch size: {MAX_BATCH_SIZE}")
-    app.run(host=host, port=port, debug=False, threaded=True)
+    app.run(host=host, port=port, debug=True, threaded=True)
