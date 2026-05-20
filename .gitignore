@@ -39,9 +39,7 @@ logs/
 storage/
 snapshots/
 *.qdrant
-qdrant_storage/
 
 # AI
 .onnx
-model/
 onnx_model/

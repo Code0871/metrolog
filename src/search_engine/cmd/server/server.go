@@ -53,7 +53,7 @@ func main() {
 	http.HandleFunc("/health", searchHandler.HealthCheck)
 
 	// Запуск сервера
-	port := ":8080"
+	port := ":8090"
 	fmt.Printf("Starting search service on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, nil))
 }
