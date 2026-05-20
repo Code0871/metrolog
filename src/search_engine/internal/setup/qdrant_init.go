@@ -75,7 +75,7 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 					},
 				},
 				"multi": {
-					Size:     96,
+					Size:     384,
 					Distance: qdrant.Distance_Cosine,
 					MultivectorConfig: &qdrant.MultiVectorConfig{
 						Comparator: qdrant.MultiVectorComparator_MaxSim,

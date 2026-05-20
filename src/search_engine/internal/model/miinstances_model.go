@@ -41,7 +41,7 @@ type PointRequest struct {
 type PointResponse struct {
 	ID      string                 `json:"id"`
 	Payload map[string]interface{} `json:"payload"`
-	Vector  []float32              `json:"vector,omitempty"` // если нужно
+	Vector  []float32              `json:"vector,omitempty"`
 }
 
 type BatchPointRequest struct {
@@ -50,4 +50,17 @@ type BatchPointRequest struct {
 
 type BatchPointResponse struct {
 	Points []PointResponse `json:"points"`
+}
+
+type HybridSearchRequest struct {
+	DenseVector  []float32    `json:"dense_vector"`
+	SparseVector SparseVector `json:"sparse_vector"`
+	MultiVector  [][]float32  `json:"multi_vector"`
+}
+
+// PointData - структура для вставки точки
+type PointData struct {
+	ID      string                 `json:"id"`
+	Payload map[string]interface{} `json:"payload"`
+	Vectors map[string]interface{} `json:"vectors"` // dense, sparse, multi вектора
 }

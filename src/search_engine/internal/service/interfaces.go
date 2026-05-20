@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"search_engine/internal/model"
+
+	"github.com/qdrant/go-client/qdrant"
 )
 
 type EmbeddingProvider interface {
@@ -12,8 +14,8 @@ type EmbeddingProvider interface {
 }
 
 type VectorSearchService interface {
-	Upsert(ctx context.Context, collection_name string, point model.UpsertRequest) error
 	UpsertBatch(ctx context.Context, collection_name string, points model.BatchUpsertRequest) error
-	SearchNearestPoints(ctx context.Context, collection_name string, req model.SearchRequest) (model.SearchResponses, error)
-	GetPointByIDBatch(ctx context.Context, collection_name string, ids model.BatchPointRequest) (model.BatchPointResponse, error)
+	GetPointByIDBatch(ctx context.Context, collection_name string, ids []string) ([]*qdrant.RetrievedPoint, error)
+	DeletePoint(ctx context.Context, collection_name string, passport string) error
+	HybridSearch(ctx context.Context, collection_name string, req model.BatchSearchRequest) ([][]*qdrant.ScoredPoint, error)
 }

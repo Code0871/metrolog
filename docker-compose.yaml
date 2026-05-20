@@ -29,6 +29,19 @@ services:
     restart: unless-stopped
     networks:
       - metrolog_network
+    
+  # redpanda-0:
+  #     image: docker.redpanda.com/redpandadata/redpanda:v26.1.6
+  #     command:
+  #       - redpanda
+  #       - start
+  #       - --mode dev-container
+  #       - kafka-addr external://0.0.0.0:19092
+  #       - --advertise-kafka-addr external://localhost:19092
+  #     ports:
+  #       - "19092:19092"
+  #     volumes:
+  #       - redpanda-data:/var/lib/redpanda/data
 
   service_park_app:
     build: ./src/service_park
@@ -45,6 +58,54 @@ services:
     depends_on:
       service_park_db:
         condition: service_healthy
+    restart: unless-stopped
+
+  embedding-service:
+    build: ./src/search_engine/ai_model
+    container_name: embedding-service
+    env_file:
+      - ./src/search_engine/config/config.env
+    environment:
+      host: 0.0.0.0
+      port: 8000
+      log_level: info
+      max_text_length: 512
+      max_batch_size: 100
+      bm25_index_path: ./bm25_index.pkl
+      dense_embedding_model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      sparse_model: qdrant/bm25
+      late_interacction_embeding_model: answerdotai/answerai-colbert-small-v1
+    ports:
+      - "8000:8000"
+    networks:
+      - metrolog_network
+    restart: unless-stopped
+
+  search-service:
+    build: ./src/search_engine/
+    container_name: search-service
+    env_file:
+      - ./src/search_engine/config/config.env
+    environment:
+      - qdrant_host=qdrant
+      - qdrant_port_grpc=6334
+      - qdrant_port_http=6333
+      - collection_name=miinstance_park
+      - qdrant_distance_type=Cosine
+      - qdrant_vector_size=384
+      - HOST=embedding-service
+      - PORT=8000
+    ports:
+      - "8090:8090"
+    networks:
+      - metrolog_network
+    depends_on:
+      qdrant:
+        condition: service_started
+      embedding-service:
+        condition: service_started
+      # redpanda-0:
+        # condition: service_started
     restart: unless-stopped
 
   # ========== NGINX ДЛЯ ФРОНТЕНДА ==========
@@ -73,3 +134,4 @@ networks:
 volumes:
   service_park_db_volume:
   qdrant_data:
+  # redpanda-data:

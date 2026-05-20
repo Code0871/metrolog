@@ -31,7 +31,7 @@ logger.info("Dense model loaded")
 
 # Для BM25 нам нужен индекс. Создаем его из корпуса
 logger.info("Loading BM25 index...")
-bm25_index_path = os.getenv("BM25_INDEX_PATH", "./bm25_index.pkl")
+bm25_index_path = os.getenv("bm25_index_path", "./bm25_index.pkl")
 
 if os.path.exists(bm25_index_path):
     with open(bm25_index_path, 'rb') as f:
@@ -40,7 +40,7 @@ if os.path.exists(bm25_index_path):
 else:
     # Если индекса нет, создаем заглушку
     logger.warning("BM25 index not found, creating dummy index")
-    dummy_corpus = ["манометр избыточного давления", "манометр показывающий"]
+    dummy_corpus = ["манометр избыточного давления", "манометр показывающий", "термометр", "Волтьометр","амперметр", "температура", "темпе"]
     tokenized_corpus = [doc.split() for doc in dummy_corpus]
     bm25_index = BM25Okapi(tokenized_corpus)
     logger.info("Dummy BM25 index created")
