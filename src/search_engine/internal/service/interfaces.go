@@ -19,3 +19,7 @@ type VectorSearchService interface {
 	DeletePoint(ctx context.Context, collection_name string, passport string) error
 	HybridSearch(ctx context.Context, collection_name string, req model.BatchSearchRequest) ([][]*qdrant.ScoredPoint, error)
 }
+
+type MiinstanceProvider interface {
+	GetMiinstances(ctx context.Context, passports []string) ([]*model.Miinstance, error)
+}

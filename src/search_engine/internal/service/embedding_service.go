@@ -12,15 +12,15 @@ import (
 )
 
 type EmbeddingService struct {
-	client *http.Client
-	apiURL string
+	client  *http.Client
+	api_url string
 }
 
 func NewEmbeddingService() *EmbeddingService {
 	cfg := config.MustLoadConfig()
 	return &EmbeddingService{
-		client: &http.Client{},
-		apiURL: cfg.EmbeddingServiceConfigs.EmbeddingServiceURL(),
+		client:  &http.Client{},
+		api_url: cfg.EmbeddingServiceConfigs.EmbeddingServiceURL(),
 	}
 }
 
@@ -85,7 +85,7 @@ func (es *EmbeddingService) doRequest(ctx context.Context, endpoint string, text
 		return fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := es.apiURL + endpoint
+	url := es.api_url + endpoint
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)

@@ -3,26 +3,24 @@ package service
 import (
 	"context"
 	"fmt"
-	_ "fmt"
-	_ "log"
-	_ "search_engine/config"
 	"search_engine/internal/model"
 	"search_engine/internal/repository"
-	_ "time"
 
 	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
 )
 
 type SearchService struct {
-	repo     repository.QdrantRepository
-	embedded EmbeddingProvider
+	repo       repository.QdrantRepository
+	embedded   EmbeddingProvider
+	miinstance MiinstanceProvider
 }
 
-func NewSearchService(repo repository.QdrantRepository, embedded EmbeddingProvider) *SearchService {
+func NewSearchService(repo repository.QdrantRepository, embedded EmbeddingProvider, miinstance MiinstanceProvider) *SearchService {
 	return &SearchService{
-		repo:     repo,
-		embedded: embedded,
+		repo:       repo,
+		embedded:   embedded,
+		miinstance: miinstance,
 	}
 }
 
@@ -116,12 +114,13 @@ func (s *SearchService) DeletePoint(ctx context.Context, collection_name string,
 	return s.repo.Delete(ctx, collection_name, passport)
 }
 
-func (s *SearchService) HybridSearch(ctx context.Context, collection_name string, req model.BatchSearchRequest) ([][]*qdrant.ScoredPoint, error) {
+func (s *SearchService) HybridSearch(ctx context.Context, collection_name string, req model.BatchSearchRequest) ([]*model.Miinstance, error) {
 	if len(req.Texts) == 0 {
-		return [][]*qdrant.ScoredPoint{}, nil
+		return []*model.Miinstance{}, nil
 	}
 
-	results := make([][]*qdrant.ScoredPoint, len(req.Texts))
+	var all_miinstances []*model.Miinstance
+	// search_results := make([][]*qdrant.ScoredPoint, len(req.Texts))
 
 	for i, searchReq := range req.Texts {
 		// Получаем эмбеддинги для одного текста
@@ -161,8 +160,25 @@ func (s *SearchService) HybridSearch(ctx context.Context, collection_name string
 			return nil, fmt.Errorf("hybrid search failed for query %d: %w", i, err)
 		}
 
-		results[i] = points
+		var passports []string
+		// извлекаем паспорта СИ из Payload
+		for _, point := range points {
+			if payload_map, ok := point.Payload["passport"]; ok {
+				passports = append(passports, payload_map.GetStringValue())
+			}
+		}
+
+		if len(passports) == 0 {
+			continue
+		}
+
+		miinstances, err := s.miinstance.GetMiinstances(ctx, passports)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get miinstances for query %d: %w", i, err)
+		}
+
+		all_miinstances = append(all_miinstances, miinstances...)
 	}
 
-	return results, nil
+	return all_miinstances, nil
 }

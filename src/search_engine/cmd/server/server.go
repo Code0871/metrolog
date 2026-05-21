@@ -31,26 +31,29 @@ func main() {
 
 	// Инициализация репозитория
 	fmt.Println("Init Qdrant repository")
-	qdrantRepo := repository.NewQdrantRepository(client)
+	qdrant_repo := repository.NewQdrantRepository(client)
 
 	// Инициализация сервиса эмбеддингов
 	fmt.Println("Init embedding service")
-	embeddingService := service.NewEmbeddingService()
+	embedding_service := service.NewEmbeddingService()
+
+	fmt.Println("Init miinstance service")
+	miinstance_service := service.NewMiinstanceService()
 
 	// Инициализация сервиса поиска
 	fmt.Println("Init search service")
-	searchService := service.NewSearchService(qdrantRepo, embeddingService)
+	searchService := service.NewSearchService(qdrant_repo, embedding_service, miinstance_service)
 
 	// Инициализация хендлеров
 	fmt.Println("Init handlers")
-	searchHandler := handlers.NewSearchHandler(searchService)
+	search_handler := handlers.NewSearchHandler(searchService)
 
 	// Регистрация роутов
 	fmt.Println("Registering routes")
-	http.HandleFunc("/api/v1/upsert/batch", searchHandler.InsertPointsHandler)
-	http.HandleFunc("/api/v1/search/hybrid", searchHandler.HybridSearchHandler)
-	http.HandleFunc("/api/v1/search/points", searchHandler.GetPointsByIDHandler)
-	http.HandleFunc("/health", searchHandler.HealthCheck)
+	http.HandleFunc("/api/v1/upsert/batch", search_handler.InsertPointsHandler)
+	http.HandleFunc("/api/v1/search/hybrid", search_handler.HybridSearchHandler)
+	http.HandleFunc("/api/v1/search/points", search_handler.GetPointsByIDHandler)
+	http.HandleFunc("/health", search_handler.HealthCheck)
 
 	// Запуск сервера
 	port := ":8090"

@@ -27,10 +27,16 @@ type EmbeddingServiceConfig struct {
 	ServicePort int
 }
 
+type MiinstanceServiceConfig struct {
+	ServiceHost string
+	ServicePort int
+}
+
 type Config struct {
-	QdrantConfigs           QdrantConfig
-	CollectionConfigs       CollectionConfig
-	EmbeddingServiceConfigs EmbeddingServiceConfig
+	QdrantConfigs            QdrantConfig
+	CollectionConfigs        CollectionConfig
+	EmbeddingServiceConfigs  EmbeddingServiceConfig
+	MiinstanceServiceConfigs MiinstanceServiceConfig
 }
 
 func MustLoadConfig() *Config {
@@ -55,6 +61,10 @@ func MustLoadConfig() *Config {
 		EmbeddingServiceConfigs: EmbeddingServiceConfig{
 			ServiceHost: getEnv("HOST", "localhost"),
 			ServicePort: getEnvAsInt("PORT", 8000),
+		},
+		MiinstanceServiceConfigs: MiinstanceServiceConfig{
+			ServiceHost: getEnv("miinstance_host", "localhost"),
+			ServicePort: getEnvAsInt("miinstance_port", 8080),
 		},
 	}
 }
@@ -92,5 +102,9 @@ func QdrantDistanceConverter(distance_type string) qdrant.Distance {
 }
 
 func (c *EmbeddingServiceConfig) EmbeddingServiceURL() string {
+	return fmt.Sprintf("http://%s:%d", c.ServiceHost, c.ServicePort)
+}
+
+func (c *MiinstanceServiceConfig) MiinstanceServiceURL() string {
 	return fmt.Sprintf("http://%s:%d", c.ServiceHost, c.ServicePort)
 }

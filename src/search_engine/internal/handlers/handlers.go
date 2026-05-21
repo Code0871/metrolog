@@ -22,47 +22,28 @@ func NewSearchHandler(searchService *service.SearchService) *SearchHandler {
 func (h *SearchHandler) HybridSearchHandler(w http.ResponseWriter, r *http.Request) {
 	var req model.BatchSearchRequest
 
-	// Декодируем запрос
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	// Валидация
 	if len(req.Texts) == 0 {
 		http.Error(w, "No texts provided", http.StatusBadRequest)
 		return
 	}
 
-	// Выполняем поиск
 	results, err := h.searchService.HybridSearch(r.Context(), "miinstance_park", req)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Search failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// Формируем ответ
-	response := make([]map[string]interface{}, len(results))
-	for i, queryResults := range results {
-		queryResponse := make([]map[string]interface{}, len(queryResults))
-		for j, point := range queryResults {
-			queryResponse[j] = map[string]interface{}{
-				"id":      point.Id.GetUuid(),
-				"score":   point.Score,
-				"payload": point.Payload,
-			}
-		}
-		response[i] = map[string]interface{}{
-			"query_index": i,
-			"results":     queryResponse,
-		}
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
-		"data":    response,
+		"data":    results,
+		"count":   len(results),
 	})
 }
 

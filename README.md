@@ -58,7 +58,7 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install .
 ```
 
----
+---git commit -m "embedding-service переписан с правильной структурой"
 
 ## Задачи каждого члена команды:
 

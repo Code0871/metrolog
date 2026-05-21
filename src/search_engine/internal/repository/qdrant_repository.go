@@ -177,18 +177,18 @@ func (qr *qdrantRepository) GetNearestPointsHybrid(ctx context.Context, collecti
 			{
 				Query: qdrant.NewQueryDense(dense_vector),
 				Using: qdrant.PtrOf("dense"),
-				Limit: qdrant.PtrOf(uint64(50)),
+				Limit: qdrant.PtrOf(uint64(15)),
 			},
 			{
 				Query: qdrant.NewQuerySparse(indicies, sparse_value),
 				Using: qdrant.PtrOf("sparse"),
-				Limit: qdrant.PtrOf(uint64(50)),
+				Limit: qdrant.PtrOf(uint64(1)),
 			},
 		},
 		Query:       qdrant.NewQueryMulti(multi_vector),
 		Using:       qdrant.PtrOf("multi"),
 		WithPayload: qdrant.NewWithPayload(true),
-		Limit:       qdrant.PtrOf(uint64(50)),
+		Limit:       qdrant.PtrOf(uint64(100)),
 	})
 
 	if err != nil {
