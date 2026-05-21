@@ -41,8 +41,15 @@ func (h *SearchHandler) HybridSearchHandler(w http.ResponseWriter, r *http.Reque
 	response := make([]map[string]interface{}, len(results))
 	for i, miinstance := range results {
 		response[i] = map[string]interface{}{
-			"passport": miinstance.Passport, // пример поля
-			// добавьте другие нужные поля из model.Miinstance
+			"passport":           miinstance.Passport,
+			"name":               miinstance.Name,
+			"type":               miinstance.Type,
+			"StateCondition":     miinstance.StateCondition,
+			"TechCondition":      miinstance.TechCondition,
+			"issue_date":         miinstance.IssueDate,
+			"commissioning_date": miinstance.CommissioningDate,
+			"is_fit":             miinstance.IsFit,
+			"mpi":                miinstance.MPI,
 		}
 	}
 
