@@ -22,19 +22,16 @@ func NewSearchHandler(searchService *service.SearchService) *SearchHandler {
 func (h *SearchHandler) HybridSearchHandler(w http.ResponseWriter, r *http.Request) {
 	var req model.BatchSearchRequest
 
-	// Декодируем запрос
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	// Валидация
 	if len(req.Texts) == 0 {
 		http.Error(w, "No texts provided", http.StatusBadRequest)
 		return
 	}
 
-	// Выполняем поиск
 	results, err := h.searchService.HybridSearch(r.Context(), "miinstance_park", req)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Search failed: %v", err), http.StatusInternalServerError)
@@ -62,7 +59,8 @@ func (h *SearchHandler) HybridSearchHandler(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
-		"data":    response,
+		"data":    results,
+		"count":   len(results),
 	})
 }
 

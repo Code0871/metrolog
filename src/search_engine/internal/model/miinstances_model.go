@@ -1,5 +1,9 @@
 package model
 
+import (
+	"time"
+)
+
 // Структура запроса на поиск
 type SearchRequest struct {
 	Text string `json:"text" validate:"required"`
@@ -63,4 +67,16 @@ type PointData struct {
 	ID      string                 `json:"id"`
 	Payload map[string]interface{} `json:"payload"`
 	Vectors map[string]interface{} `json:"vectors"` // dense, sparse, multi вектора
+}
+
+type Miinstance struct {
+	Passport          *string    `json:"passport"`
+	Name              *string    `json:"name"`
+	Type              *string    `json:"type"`
+	StateCondition    *string    `json:"state_condition"`
+	TechCondition     *string    `json:"tech_condition"`
+	IssueDate         *time.Time `json:"issue_date,omitempty"`
+	CommissioningDate *time.Time `json:"commissioning_date,omitempty"`
+	IsFit             *bool      `json:"is_fit"`
+	MPI               *int32     `json:"mpi"`
 }

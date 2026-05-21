@@ -41,8 +41,8 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 	}
 	if collection {
 		fmt.Printf("Collection '%s' already exists\n", collection_name)
-		client.DeleteCollection(context.Background(), collection_name)
-		//return
+		//client.DeleteCollection(context.Background(), collection_name)
+		return
 	}
 
 	m := uint64(16)
