@@ -97,6 +97,7 @@ services:
       - PORT=8000
       - miinstance_host=service_park_app
       - miinstance_port=8080
+
     ports:
       - "8090:8090"
     networks:

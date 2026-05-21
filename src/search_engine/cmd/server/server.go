@@ -31,6 +31,7 @@ func main() {
 
 	// Инициализация репозитория
 	fmt.Println("Init Qdrant repository")
+
 	qdrant_repo := repository.NewQdrantRepository(client)
 
 	// Инициализация сервиса эмбеддингов
@@ -54,6 +55,7 @@ func main() {
 	http.HandleFunc("/api/v1/search/hybrid", search_handler.HybridSearchHandler)
 	http.HandleFunc("/api/v1/search/points", search_handler.GetPointsByIDHandler)
 	http.HandleFunc("/health", search_handler.HealthCheck)
+
 
 	// Запуск сервера
 	port := ":8090"

@@ -6,6 +6,7 @@ import (
 	"search_engine/internal/model"
 	"search_engine/internal/repository"
 
+
 	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
 )

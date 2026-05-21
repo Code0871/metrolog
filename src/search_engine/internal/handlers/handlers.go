@@ -38,6 +38,23 @@ func (h *SearchHandler) HybridSearchHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Формируем ответ
+	response := make([]map[string]interface{}, len(results))
+	for i, queryResults := range results {
+		queryResponse := make([]map[string]interface{}, len(queryResults))
+		for j, point := range queryResults {
+			queryResponse[j] = map[string]interface{}{
+				"id":      point.Id.GetUuid(),
+				"score":   point.Score,
+				"payload": point.Payload,
+			}
+		}
+		response[i] = map[string]interface{}{
+			"query_index": i,
+			"results":     queryResponse,
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{

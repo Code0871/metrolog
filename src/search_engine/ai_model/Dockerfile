@@ -24,6 +24,7 @@ COPY src/ ./src/
 COPY main.py .
 COPY model_service.py .
 
+
 # Копируем модели (если они уже скачаны)
 COPY models_cache/ ./models_cache/
 
