@@ -101,7 +101,7 @@ go run main.go
 |-------|----------|----------|--------|
 | GET | `/api/miinstance` | Список всех СИ (первые 20) | `curl http://localhost:8080/api/miinstance` |
 | GET | `/api/miinstance?limit=10&offset=0` | Список с пагинацией | `curl "http://localhost:8080/api/miinstance?limit=10&offset=20"` |
-| GET | `/api/miinstance/:passport` | Получить по паспорту | `curl http://localhost:8080/api/miinstance/14120` |
+| GET | `/api/miinstance/passport/?idx=` | Получить по паспорту | `curl api/miinstance/passport/?idx=1,10,12,34` |
 | GET | `/health` | Проверка здоровья | `curl http://localhost:8080/health` |
 | GET | `/ping` | Ping сервера | `curl http://localhost:8080/ping` |
 | GET | `/` | Фронтенд (HTML таблица) | Открыть в браузере |
