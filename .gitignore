@@ -31,7 +31,7 @@ logs/
 *.joblib
 
 # Переменные окружения
-.env
+*.env
 !.env.example
 
 # Qdrant
