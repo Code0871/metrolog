@@ -20,7 +20,6 @@ training/
 
 # Jupyter 
 .ipynb_checkpoints/
-*.ipynb
 
 # Логи
 *.log
