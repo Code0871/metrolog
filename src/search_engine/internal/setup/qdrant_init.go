@@ -41,7 +41,6 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 	}
 	if collection {
 		fmt.Printf("Collection '%s' already exists\n", collection_name)
-		//client.DeleteCollection(context.Background(), collection_name)
 		return
 	}
 
@@ -75,8 +74,8 @@ func MustInitQdrantCollection(client *qdrant.Client, collection_name string, vec
 					},
 				},
 				"multi": {
-					Size:     384,
-					Distance: qdrant.Distance_Cosine,
+					Size:     96,
+					Distance: qdrant.Distance_Dot,
 					MultivectorConfig: &qdrant.MultiVectorConfig{
 						Comparator: qdrant.MultiVectorComparator_MaxSim,
 					},
