@@ -3,6 +3,7 @@ import numpy as np
 from typing import List, Dict, Optional
 from pathlib import Path
 from src.models.sparse_model import SparseModel
+from src.services.bm25_indexer import create_bm25_simple, get_bm25_indexer
 from dotenv import load_dotenv
 
 # Правильный путь к конфигу
@@ -24,8 +25,10 @@ class EmbeddingService:
             return
         
         self.cache_dir = os.getenv("model_cache", "./models_cache")
-        
+
         # Sparse модель
+        create_bm25_simple()
+        bm25 = get_bm25_indexer()
         self.sparse_model = SparseModel(
             model_name=os.getenv("sparse_model", "Qdrant/bm25"),
             cache_dir=self.cache_dir

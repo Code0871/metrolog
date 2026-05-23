@@ -16,6 +16,12 @@ type QdrantConfig struct {
 	QdrantPort int
 }
 
+type SearchParamsConfig struct {
+	QdrantDenseCount  int
+	QdrantSparseCount int
+	QdrantMultiCount  int
+}
+
 type CollectionConfig struct {
 	CollectionName     string
 	QdrantDistanceType qdrant.Distance
@@ -37,6 +43,7 @@ type Config struct {
 	CollectionConfigs        CollectionConfig
 	EmbeddingServiceConfigs  EmbeddingServiceConfig
 	MiinstanceServiceConfigs MiinstanceServiceConfig
+	SearchParamsConfigs      SearchParamsConfig
 }
 
 func MustLoadConfig() *Config {
@@ -65,6 +72,11 @@ func MustLoadConfig() *Config {
 		MiinstanceServiceConfigs: MiinstanceServiceConfig{
 			ServiceHost: getEnv("miinstance_host", "localhost"),
 			ServicePort: getEnvAsInt("miinstance_port", 8080),
+		},
+		SearchParamsConfigs: SearchParamsConfig{
+			QdrantDenseCount:  getEnvAsInt("dense_count", 25),
+			QdrantSparseCount: getEnvAsInt("sparse_count", 25),
+			QdrantMultiCount:  getEnvAsInt("multi_count", 25),
 		},
 	}
 }

@@ -93,6 +93,9 @@ services:
       - collection_name=miinstance_park
       - qdrant_distance_type=Cosine
       - qdrant_vector_size=384
+      - dense_count=25
+      - sparse_count=25
+      - multi_count=25
       - HOST=embedding-service
       - PORT=8000
       - miinstance_host=service_park_app

@@ -1,4 +1,3 @@
-# src/models/sparse_model.py
 from sklearn.feature_extraction.text import TfidfVectorizer
 from pathlib import Path
 from typing import List
@@ -10,8 +9,8 @@ class SparseModel:
         self.cache_dir = Path(cache_dir)
         self.vectorizer = TfidfVectorizer(
             analyzer='char_wb',
-            ngram_range=(2, 4),
-            max_features=5000,
+            ngram_range=(2, 5),
+            max_features=100000,
             min_df=1,
             max_df=1.0,
             sublinear_tf=True

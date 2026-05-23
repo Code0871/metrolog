@@ -17,19 +17,16 @@ RUN pip install --no-cache-dir \
     scikit-learn \
     numpy \
     python-dotenv \
-    huggingface-hub
+    huggingface-hub \
+    rank_bm25==0.2.2
 
 # Копируем исходный код
 COPY src/ ./src/
 COPY main.py .
 COPY model_service.py .
 
-
 # Копируем модели (если они уже скачаны)
 COPY models_cache/ ./models_cache/
-
-# Копируем BM25 индекс
-COPY bm25_index.pkl .
 
 # Создаем директорию для конфига (будет подмонтирована)
 RUN mkdir -p /app/config

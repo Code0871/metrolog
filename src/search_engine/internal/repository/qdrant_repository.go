@@ -7,6 +7,8 @@ import (
 	"log"
 	"time"
 
+	"search_engine/config"
+
 	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
 )
@@ -170,6 +172,9 @@ func (qr *qdrantRepository) GetNearestPointsSparse(ctx context.Context, collecti
 }
 
 func (qr *qdrantRepository) GetNearestPointsHybrid(ctx context.Context, collection_name string, dense_vector []float32, indicies []uint32, sparse_value []float32, multi_vector [][]float32) ([]*qdrant.ScoredPoint, error) {
+	dense := uint64(config.MustLoadConfig().SearchParamsConfigs.QdrantDenseCount)
+	sparse := uint64(config.MustLoadConfig().SearchParamsConfigs.QdrantSparseCount)
+	multi := uint64(config.MustLoadConfig().SearchParamsConfigs.QdrantMultiCount)
 
 	results, err := qr.client.Query(ctx, &qdrant.QueryPoints{
 		CollectionName: collection_name,
@@ -177,18 +182,18 @@ func (qr *qdrantRepository) GetNearestPointsHybrid(ctx context.Context, collecti
 			{
 				Query: qdrant.NewQueryDense(dense_vector),
 				Using: qdrant.PtrOf("dense"),
-				Limit: qdrant.PtrOf(uint64(15)),
+				Limit: &dense,
 			},
 			{
 				Query: qdrant.NewQuerySparse(indicies, sparse_value),
 				Using: qdrant.PtrOf("sparse"),
-				Limit: qdrant.PtrOf(uint64(1)),
+				Limit: &sparse,
 			},
 		},
 		Query:       qdrant.NewQueryMulti(multi_vector),
 		Using:       qdrant.PtrOf("multi"),
 		WithPayload: qdrant.NewWithPayload(true),
-		Limit:       qdrant.PtrOf(uint64(100)),
+		Limit:       &multi,
 	})
 
 	if err != nil {
