@@ -18,12 +18,11 @@ RUN pip install --no-cache-dir \
     numpy \
     python-dotenv \
     huggingface-hub \
-    rank_bm25==0.2.2
+    rank_bm25
 
 # Копируем исходный код
 COPY src/ ./src/
 COPY main.py .
-COPY model_service.py .
 
 # Копируем модели (если они уже скачаны)
 COPY models_cache/ ./models_cache/
