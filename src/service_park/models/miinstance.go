@@ -49,10 +49,11 @@ type MiInstance struct {
 //	  "error": "record not found"
 //	}
 type Response struct {
-	Success bool        `json:"success"`         // Статус выполнения запроса (true/false)
-	Data    interface{} `json:"data,omitempty"`  // Полезные данные (любого типа)
-	Total   int         `json:"total,omitempty"` // Общее количество записей (для пагинации)
-	Error   string      `json:"error,omitempty"` // Текст ошибки, если success = false
+	Success bool        `json:"success"`           // Статус выполнения запроса (true/false)
+	Message string      `json:"message,omitempty"` // Человеко-читаемое сообщение (опционально)
+	Data    interface{} `json:"data,omitempty"`    // Полезные данные (любого типа)
+	Total   int         `json:"total,omitempty"`   // Общее количество записей (для пагинации)
+	Error   string      `json:"error,omitempty"`   // Текст ошибки, если success = false
 }
 
 // ListRequest - параметры пагинации для GET /api/miinstance

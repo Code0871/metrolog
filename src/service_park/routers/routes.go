@@ -48,6 +48,11 @@ func SetupRouter() *gin.Engine {
 			miinstance.GET("", miInstanceHandler.GetAll)
 			miinstance.GET("/", miInstanceHandler.GetAll)
 			miinstance.GET("/passport", miInstanceHandler.GetByPassport)
+			miinstance.POST("/", miInstanceHandler.Create)
+			miinstance.DELETE("/passport/:passport", miInstanceHandler.Delete)
+			miinstance.DELETE("/passport", miInstanceHandler.DeleteMulti)
+			miinstance.HEAD("/passport/:passport", miInstanceHandler.Head)
+			miinstance.PUT("/passport/:passport", miInstanceHandler.Update)
 		}
 	}
 
