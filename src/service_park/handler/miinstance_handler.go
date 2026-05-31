@@ -15,9 +15,11 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"service_park/models"
 	"service_park/service"
+	"service_park/utils"
 	"strconv"
 	"strings"
 
@@ -114,14 +116,7 @@ func (h *MIInstanceHandler) GetByPassport(c *gin.Context) {
 	}
 
 	// Разделяем строку по запятой и очищаем пробелы
-	rawPassports := strings.Split(passportsStr, ",")
-	passports := make([]string, 0, len(rawPassports))
-	for _, passport := range rawPassports {
-		trimmedPassport := strings.TrimSpace(passport)
-		if trimmedPassport != "" {
-			passports = append(passports, trimmedPassport)
-		}
-	}
+	passports := utils.ParseCommaSeparatedString(passportsStr)
 
 	if len(passports) == 0 {
 		c.JSON(http.StatusBadRequest, models.Response{
@@ -154,4 +149,201 @@ func (h *MIInstanceHandler) GetByPassport(c *gin.Context) {
 		Data:    instances,
 		Total:   len(instances),
 	})
+}
+
+func (h *MIInstanceHandler) DeleteMulti(c *gin.Context) {
+
+	passportsStr := c.Query("idx")
+	if passportsStr == "" {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "Passport parameter is required",
+		})
+		return
+	}
+
+	// Разделяем строку по запятой и очищаем пробелы
+	passports := utils.ParseCommaSeparatedString(passportsStr)
+
+	if len(passports) == 0 {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "Passport parameter is required",
+		})
+		return
+	}
+
+	deleteCount, err := h.service.DeleteMultiple(passports)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Error:   "Error deleting records: " + err.Error(),
+		})
+		return
+	}
+
+	if deleteCount == 0 {
+		c.JSON(http.StatusNotFound, models.Response{
+			Success: false,
+			Error:   "No records found for the provided passports",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: fmt.Sprintf("Successfully deleted %d records", deleteCount),
+	})
+
+}
+
+// Create - POST /api/miinstance
+// Создает новое средство измерения
+//
+// Тело запроса (JSON):
+// {
+//   "passport": "12345",
+//   "name": "СИ-1",
+//   "type": "Тип 1",
+//   "state_condition": "Хорошее",
+//   "tech_condition": "Исправно",
+//   "issue_date": "2026-01-01",
+//   "commissioning_date": "2026-02-01",
+//   "is_fit": true,
+//   "mpi": 100
+// }
+
+func (h *MIInstanceHandler) Create(c *gin.Context) {
+	var req models.MiInstance
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	// Валидация данных
+	if !req.Passport.Valid || req.Passport.String == "" {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "Passport is required",
+		})
+		return
+	}
+
+	// Вызов сервиса для создания новой записи
+	err := h.service.Create(&req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Error:   "Error creating record: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, models.Response{
+		Success: true,
+		Message: "Record created successfully",
+		Data:    req,
+	})
+
+}
+
+// DELETE /api/miinstance/passport/:passport
+func (h *MIInstanceHandler) Delete(c *gin.Context) {
+
+	passport := c.Param("passport")
+	if passport == "" {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "Passport parameter is required",
+		})
+		return
+	}
+
+	if err := h.service.Delete(passport); err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Error:   "Error deleting record: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: "Record deleted successfully",
+	})
+
+}
+
+// PUT /api/miinstance/passport/:passport
+// обновляет существующую запись по паспорту
+func (h *MIInstanceHandler) Update(c *gin.Context) {
+	passport := c.Param("passport")
+	if passport == "" {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "Passport parameter is required",
+		})
+		return
+	}
+
+	var req models.MiInstance
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	if err := h.service.Update(passport, &req); err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Error:   "Error updating record: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: "Record updated successfully",
+	})
+
+}
+
+// HEAD /api/miinstance/passport/:passport
+// проверяет существование средства измерения по паспорту
+func (h *MIInstanceHandler) Head(c *gin.Context) {
+	passport := c.Param("passport")
+
+	if passport == "" {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Error:   "passport is required",
+		})
+		return
+	}
+
+	exists, err := h.service.Exist(passport)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	if !exists {
+		c.JSON(http.StatusNotFound, models.Response{
+			Success: false,
+			Error:   "record not found",
+		})
+		return
+	}
+
+	c.Header("X-Record-Exists", "true")
+	c.Header("X-Record-Passport", passport)
+	c.Status(http.StatusOK)
 }

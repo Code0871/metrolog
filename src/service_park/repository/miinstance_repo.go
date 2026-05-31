@@ -136,3 +136,133 @@ func (r *MiInstanceRepository) GetByPassports(passports []string) ([]models.MiIn
 
 	return instances, nil
 }
+
+// DeleteMultiple - удаляет записи по нескольким паспортам
+func (r *MiInstanceRepository) DeleteMultiple(passports []string) (int64, error) {
+	if len(passports) == 0 {
+		return 0, fmt.Errorf("passports list is empty")
+	}
+
+	query, args, err := sqlx.In(`
+	DELETE FROM miinstance WHERE miinstance_passport IN (?)`,
+		passports)
+
+	if err != nil {
+		return 0, fmt.Errorf("sqlx.In error: %w", err)
+	}
+
+	query = db.DB.Rebind(query)
+	result, err := db.DB.Exec(query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("delete error: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("rows affected error: %w", err)
+	}
+	return rowsAffected, nil
+
+}
+
+// createMiInstance - создает новую запись в таблице miinstance
+func (r *MiInstanceRepository) Create(inst *models.MiInstance) error {
+	query := `
+		INSERT INTO miinstance (
+			miinstance_passport,
+			miinstance_name,
+			miinstance_type,
+			miinstance_state_condition,
+			miinstance_tech_condition,
+			issue_date,
+			commissioning_date,
+			is_fit,
+			mpi
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`
+
+	_, err := db.DB.Exec(query,
+		inst.Passport,
+		inst.Name,
+		inst.Type,
+		inst.StateCondition,
+		inst.TechCondition,
+		inst.IssueDate,
+		inst.CommissioningDate,
+		inst.IsFit,
+		inst.MPI,
+	)
+	if err != nil {
+		return fmt.Errorf("insert error: %w", err)
+	}
+
+	return nil
+}
+
+// PUT - обновляет существующую запись по паспорту
+func (r *MiInstanceRepository) Update(passport string, inst *models.MiInstance) error {
+	query := `
+		UPDATE miinstance SET
+			miinstance_name = $1,
+			miinstance_type = $2,
+			miinstance_state_condition = $3,
+			miinstance_tech_condition = $4,
+			issue_date = $5,
+			commissioning_date = $6,
+			is_fit = $7,
+			mpi = $8
+		WHERE miinstance_passport = $9
+	`
+
+	result, err := db.DB.Exec(query,
+		inst.Name,              // $1
+		inst.Type,              // $2
+		inst.StateCondition,    // $3
+		inst.TechCondition,     // $4
+		inst.IssueDate,         // $5
+		inst.CommissioningDate, // $6
+		inst.IsFit,             // $7
+		inst.MPI,               // $8
+		passport,               // $9
+	)
+	if err != nil {
+		return fmt.Errorf("update error: %w", err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("record with passport %s not found", passport)
+	}
+
+	return nil
+}
+
+// DELETE - удаляет запись по паспорту
+func (r *MiInstanceRepository) Delete(passport string) error {
+	query := `DELETE FROM miinstance WHERE miinstance_passport = $1`
+
+	result, err := db.DB.Exec(query, passport)
+	if err != nil {
+		return fmt.Errorf("delete error: %w", err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("record with passport %s not found", passport)
+	}
+
+	return nil
+}
+
+// Exists - проверяет существование записи по паспорту
+func (r *MiInstanceRepository) Exists(passport string) (bool, error) {
+	query := `SELECT COUNT(*) FROM miinstance WHERE miinstance_passport = $1`
+
+	var exists bool
+	err := db.DB.Get(&exists, query, passport)
+	if err != nil {
+		return false, fmt.Errorf("exists error: %w", err)
+	}
+
+	return exists, nil
+
+}
