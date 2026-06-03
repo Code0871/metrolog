@@ -6,7 +6,6 @@ import (
 	"search_engine/internal/model"
 	"search_engine/internal/repository"
 
-
 	"github.com/google/uuid"
 	"github.com/qdrant/go-client/qdrant"
 )
@@ -139,6 +138,9 @@ func (s *SearchService) HybridSearch(ctx context.Context, collection_name string
 		if err != nil {
 			return nil, fmt.Errorf("late embedding failed for query %d: %w", i, err)
 		}
+
+		fmt.Printf("Dense vector size: %d\n", len(dense[0]))
+		fmt.Printf("Multi vector inner size: %d\n", len(multi[0][0]))
 
 		// Извлекаем данные из sparse вектора
 		indices := make([]uint32, len(sparse[0].Indices))

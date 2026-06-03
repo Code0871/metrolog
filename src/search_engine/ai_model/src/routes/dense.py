@@ -4,7 +4,7 @@ from src.services.embedding_service import EmbeddingService
 embedding_service = EmbeddingService()
 
 def register_dense_routes(app):
-    @app.route('/embed/dense', methods=['POST'])
+    @app.route('/embed/dense', methods=['GET'])
     def embed_dense():
         try:
             data = request.json

@@ -1,8 +1,15 @@
-# Dockerfile
-FROM python:3.11-slim
+FROM python:3.12-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
+# RUN pip config set global.index-url https://mirror.yandex.ru/pypi/simple/
+# RUN pip config set global.trusted-host mirror.yandex.ru
+
+RUN pip config set global.timeout 100
+
+# зависимости для библиотек
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -10,29 +17,19 @@ RUN apt-get update && apt-get install -y \
 
 COPY pyproject.toml .
 
-# Устанавливаем Python-зависимости
-RUN pip install --no-cache-dir \
-    flask \
-    sentence-transformers \
-    scikit-learn \
-    numpy \
-    python-dotenv \
-    huggingface-hub \
-    rank_bm25
+RUN pip install --no-cache-dir --upgrade pip     
+RUN pip install --no-cache-dir .
+
+# Скачиваем модели
+COPY src/download_models.py .
+RUN python download_models.py
 
 # Копируем исходный код
 COPY src/ ./src/
 COPY main.py .
 
-# Копируем модели (если они уже скачаны)
-COPY models_cache/ ./models_cache/
-
 # Создаем директорию для конфига (будет подмонтирована)
 RUN mkdir -p /app/config
-
-# Переменные окружения
-ENV PYTHONUNBUFFERED=1
-ENV MODEL_CACHE=/app/models_cache
 
 EXPOSE 8000
 

@@ -1,5 +1,3 @@
-
-## Временный файл для сохранения BM25 индекса
 import pickle
 from rank_bm25 import BM25Okapi
 import os

@@ -4,28 +4,20 @@ from typing import List
 import os
 
 class DenseEmbeddingModel:
-    def __init__(self, model_name: str, cache_dir: str = "./models_cache"):
+    def __init__(self, model_name: str, models_dir: str = "./models_dir/dense"):
         self.model_name = model_name
-        self.cache_dir = Path(cache_dir)
+
+        self.models_dir = Path(__file__).parents[2] / "models_dir" / "dense"
         
-        model_path = self._get_model_path()
-        
-        # Загружаем модель из локального пути
-        if model_path.exists():
-            print(f"Loading model from local path: {model_path}")
-            self.model = SentenceTransformer(str(model_path))
+        if self.models_dir.exists() and any(self.models_dir.iterdir()):
+            print(f"Loading model from local path: {self.models_dir}")
+            self.model = SentenceTransformer(str(self.models_dir))
         else:
-            print(f"Local model not found, downloading: {model_name}")
+            print(f"Local model not found at {self.models_dir}, downloading: {model_name}")
             self.model = SentenceTransformer(
                 model_name, 
-                cache_folder=str(self.cache_dir)
+                cache_folder=str(self.models_dir)
             )
-    
-    def _get_model_path(self) -> Path:
-        """Получить путь к скачанной модели"""
-        # snapshot_download сохраняет в cache_dir/models--org--model_name
-        model_dir_name = "models--" + self.model_name.replace("/", "--")
-        return self.cache_dir / model_dir_name / "snapshots" / "*"
     
     def encode(self, texts: List[str]) -> List[List[float]]:
         """Получить эмбеддинги"""

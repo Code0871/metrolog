@@ -5,7 +5,7 @@ from src.services.embedding_service import EmbeddingService
 embedding_service = EmbeddingService()
 
 def register_sparse_routes(app):
-    @app.route('/embed/sparse', methods=['POST'])
+    @app.route('/embed/sparse', methods=['GET'])
     def embed_sparse():
         try:
             data = request.json

@@ -8,7 +8,7 @@ load_dotenv(env_path)
 
 class Config:
     # model settings
-    models_cache = os.getenv('models_cache', '/app/models_cache')
+    models_dir = os.getenv('model_dir', '/app/model_dir')
 
     dense_model_name = os.getenv('dense_model_name', 'sentence-transformers/paraphrase-multilingual-mini_lm-l12-v2')
     late_model_name = os.getenv('late_model_name', 'answerdotai/answerai-colbert-small-v1')

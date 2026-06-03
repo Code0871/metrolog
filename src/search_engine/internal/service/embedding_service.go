@@ -86,7 +86,7 @@ func (es *EmbeddingService) doRequest(ctx context.Context, endpoint string, text
 	}
 
 	url := es.api_url + endpoint
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, "GET", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

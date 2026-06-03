@@ -176,6 +176,13 @@ func (qr *qdrantRepository) GetNearestPointsHybrid(ctx context.Context, collecti
 	sparse := uint64(config.MustLoadConfig().SearchParamsConfigs.QdrantSparseCount)
 	multi := uint64(config.MustLoadConfig().SearchParamsConfigs.QdrantMultiCount)
 
+	fmt.Printf("DEBUG: multi_vector length = %d\n", len(multi_vector))
+	if len(multi_vector) > 0 {
+		fmt.Printf("DEBUG: multi_vector[0] length = %d\n", len(multi_vector[0]))
+	} else {
+		fmt.Println("DEBUG: multi_vector is EMPTY!")
+	}
+
 	results, err := qr.client.Query(ctx, &qdrant.QueryPoints{
 		CollectionName: collection_name,
 		Prefetch: []*qdrant.PrefetchQuery{

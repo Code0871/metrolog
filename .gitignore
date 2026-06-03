@@ -32,6 +32,7 @@ logs/
 # Переменные окружения
 *.env
 !.env.example
+colbert_env/
 
 # Qdrant
 .qdrant_storage/

@@ -1,115 +1,64 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 import pickle
 import os
 
+from src.services.bm25_indexer import get_bm25_indexer, bm25_indexer
+
 class SparseModel:
-    def __init__(self, model_name: str = "Qdrant/bm25", cache_dir: str = "./models_cache"):
-        self.cache_dir = Path(cache_dir)
-        self.vectorizer = TfidfVectorizer(
-            analyzer='char_wb',
-            ngram_range=(2, 5),
-            max_features=100000,
-            min_df=1,
-            max_df=1.0,
-            sublinear_tf=True
-        )
-        self.is_fitted = False
-        self.bm25_index_path = os.getenv("bm25_index_path", "./bm25_index.pkl")
+    def __init__(self, model_name: str = "Qdrant/bm25", models_dir: str = "./models_dir/sparse"):
+        self.model_name = model_name
+        self.cache_dir = Path(models_dir)
         
-        # Загружаем индекс и обучаем модель
-        self._load_and_fit_from_index()
-    
-    def _load_and_fit_from_index(self):
-        """Загрузка индекса и обучение модели"""
-        if os.path.exists(self.bm25_index_path):
-            try:
-                with open(self.bm25_index_path, 'rb') as f:
-                    index = pickle.load(f)
-                
-                if 'corpus' in index:
-                    documents = index['corpus']
-                    print(f"Loaded {len(documents)} documents from corpus (old format)")
-                elif 'documents' in index:
-                    documents = index['documents']
-                    print(f"Loaded {len(documents)} documents from index (new format)")
-                else:
-                    print(f"Unknown index format. Keys: {index.keys()}")
-                    return
-                
-                if documents:
-                    print(f"Training sparse model on {len(documents)} documents...")
-                    self.vectorizer.fit(documents)
-                    self.is_fitted = True
-                    print(f"Sparse model trained! Vocabulary size: {len(self.vectorizer.vocabulary_)}")
-                else:
-                    print("Index loaded but no documents found")
-            except Exception as e:
-                print(f"Failed to load index: {e}")
+        # Используем уже готовый индекс из сервисного слоя
+        self.bm25 = bm25_indexer
+        self.is_ready = self.bm25 is not None
+        
+        # Загружаем корпус (список документов)
+        self.corpus = self.load_corpus()
+        
+        if self.is_ready:
+            print(f"SparseModel готов, документов: {len(self.corpus) if self.corpus else 'неизвестно'}")
         else:
-            print(f"Index not found at {self.bm25_index_path}")
+            print("SparseModel: индекс не загружен")
     
-    def encode(self, texts: List[str]) -> List[dict]:
-        """Получить sparse вектора для текстов"""
-        if not self.is_fitted:
-            print(f"Model not fitted, training on current texts...")
-            self.vectorizer.fit(texts)
-            self.is_fitted = True
+    def load_corpus(self) -> List[str]:
+        index_path = 'bm25_index.pkl'
         
-        sparse_matrix = self.vectorizer.transform(texts)
-        
-        sparse_vectors = []
-        for i in range(sparse_matrix.shape[0]):
-            row = sparse_matrix[i]
-            sparse_vectors.append({
-                "indices": row.indices.tolist(),
-                "values": row.data.tolist()
-            })
-        
-        return sparse_vectors
+        if os.path.exists(index_path):
+            with open(index_path, 'rb') as f:
+                data = pickle.load(f)
+                return data.get('corpus', [])
+        return []
     
-    def update_index(self, new_corpus):
-        """Добавление документов в индекс и переобучение модели"""
-        # Загружаем существующий индекс
-        if os.path.exists(self.bm25_index_path):
-            with open(self.bm25_index_path, 'rb') as f:
-                index = pickle.load(f)
-            
-            # Поддерживаем оба формата
-            if 'corpus' in index:
-                documents = index['corpus']
-            elif 'documents' in index:
-                documents = index['documents']
-            else:
-                documents = []
-        else:
-            index = {'documents': [], 'document_count': 0}
-            documents = []
+    def search(self, query: str, top_k: int = 10) -> List[str]:
+        if not self.is_ready:
+            raise ValueError("BM25 индекс не загружен. Запустите create_bm25_simple() сначала")
         
-        if isinstance(new_corpus, str):
-            new_corpus = [new_corpus]
+        # Токенизация запроса (как при создании индекса)
+        tokenized_query = query.lower().split()
         
-        added_count = 0
-        for doc in new_corpus:
-            if doc not in documents:
-                documents.append(doc)
-                added_count += 1
+        # Получение топ-N документов
+        top_docs = self.bm25.get_top_n(tokenized_query, self.corpus, n=top_k)
         
-        if added_count > 0:
-            print(f"Retraining model on {len(documents)} documents...")
-            self.vectorizer.fit(documents)
-            self.is_fitted = True
-            print(f"Model retrained! Vocabulary size: {len(self.vectorizer.vocabulary_)}")
+        return top_docs
+    
+    def get_scores(self, query: str) -> List[float]:
+        if not self.is_ready:
+            raise ValueError("BM25 индекс не загружен")
         
-        # Сохраняем в новом формате (конвертируем старый если нужно)
-        index['documents'] = documents
-        index['document_count'] = len(documents)
+        tokenized_query = query.lower().split()
+        scores = self.bm25.get_scores(tokenized_query)
+        return scores.tolist()
+    
+    def search_with_scores(self, query: str, top_k: int = 10) -> List[tuple]:
+        if not self.is_ready:
+            raise ValueError("BM25 индекс не загружен")
         
-        with open(self.bm25_index_path, 'wb') as f:
-            pickle.dump(index, f)
+        tokenized_query = query.lower().split()
+        scores = self.bm25.get_scores(tokenized_query)
         
-        return added_count, len(documents)
-
-
-SparseEmbeddingModel = SparseModel
+        # Сортируем документы по убыванию оценки
+        scored_docs = sorted(zip(self.corpus, scores), key=lambda x: x[1], reverse=True)
+        
+        return scored_docs[:top_k]
