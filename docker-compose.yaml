@@ -9,6 +9,11 @@ services:
       - ./backup:/backup
     ports:
       - "5433:5432"
+    # command: |
+    #   postgres
+    #   -c wal_level = logical
+    #   -c max_wal_senders = 4
+    #   -c max_replication_slots = 4 
     restart: unless-stopped
     networks:
       - metrolog_network
@@ -35,13 +40,42 @@ services:
   #     command:
   #       - redpanda
   #       - start
-  #       - --mode dev-container
-  #       - kafka-addr external://0.0.0.0:19092
-  #       - --advertise-kafka-addr external://localhost:19092
+  #       - --smp 1
+  #       - --memory 1G
+  #       - --reserve-memory 0M
+  #       - --overprovisioned
+  #       - --node-id 0
+  #       - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+  #       - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
   #     ports:
-  #       - "19092:19092"
+  #       - "9092:9092"      # Kafka API (для подключения приложений)
+  #       - "8081:8081"      # Schema Registry
+  #       - "9644:9644"      # Admin API
   #     volumes:
   #       - redpanda-data:/var/lib/redpanda/data
+  #     healthcheck:
+  #       test: ["CMD", "rpk", "cluster", health]
+  #       interval: 10s
+  #       timeout: 5s
+  #       retries: 5
+
+  # debezium:
+  #   image: quay.io/debezium/connect:2.5
+  #   container_name: debezium
+  #   ports:
+  #     - "8083:8083"
+  #   environment:
+  #     BOOTSTRAP_SERVERS: redpanda:29092
+  #     GROUP_ID: 1
+  #     CONFIG_STORAGE_TOPIC: connect_configs
+  #     OFFSET_STORAGE_TOPIC: connect_offsets
+  #     STATUS_STORAGE_TOPIC: connect_statuses
+  #     # Ключевая настройка — указываем, что подключаемся к Redpanda, а не к Kafka
+  #   depends_on:
+  #     redpanda-0:
+  #       condition: service_healthy
+  #     service_park_db:
+  #       condition: service_healthy
 
   service_park_app:
     build: ./src/service_park
@@ -61,7 +95,7 @@ services:
     restart: unless-stopped
 
   embedding-service:
-    build: ./src/search_engine/ai_model
+    build: ./src/embedding_service/
     container_name: embedding-service
     env_file:
       - ./src/search_engine/config/config.env
@@ -100,7 +134,6 @@ services:
       - PORT=8000
       - miinstance_host=service_park_app
       - miinstance_port=8080
-
     ports:
       - "8090:8090"
     networks:

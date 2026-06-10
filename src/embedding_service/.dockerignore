@@ -1,0 +1,43 @@
+# Виртуальные окружения (все возможные варианты)
+colbert_env
+colbert_env/
+venv
+venv/
+env
+env/
+.venv
+.venv/
+
+# Кэш моделей
+models_cache
+models_cache/
+.cache/
+cache/
+
+# Файлы моделей и бинарники
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Git
+.git/
+.gitignore
+
+# Логи
+*.log
+*.log.*
+
+# Сборка
+build/
+dist/
+*.egg-info/
