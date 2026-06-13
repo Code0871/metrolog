@@ -19,6 +19,10 @@ class Config:
         self.main_base_password = os.getenv("main_base_password")
         self.main_base_dbname = os.getenv("main_base_dbname", "miinstance_base")
 
-# Использование
 config = Config()
-print(config.database_url)
+
+main_base_host = config.main_base_host
+main_base_port = config.main_base_port
+main_base_user = config.main_base_user
+main_base_password = config.main_base_password
+main_base_dbname = config.main_base_dbname

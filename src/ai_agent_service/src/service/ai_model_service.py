@@ -5,6 +5,9 @@ from typing import List, Dict, Any, Union, Optional
 import pickle
 import pandas as pd
 import psycopg2
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
+from config.config import main_base_host, main_base_port, main_base_user, main_base_password, main_base_dbname 
 
 class AIModel:
     def __init__(self, model_dir: Optional[str] = None):
@@ -62,11 +65,11 @@ class AIModel:
     ## Сейчас так из-за нехватки времени
     def get_data_and_transform_to_df(self, start_date: str, end_date: str) -> pd.DataFrame:
         conf = psycopg2.connect(
-            dbname=os.getenv("main_base_dbname"),
-            user=os.getenv("main_base_user"),
-            password=os.getenv("main_base_password"),
-            host=os.getenv("main_base_host"),
-            port=os.getenv("main_base_port")
+            dbname= main_base_dbname,
+            user=main_base_user,
+            password=main_base_password,
+            host=main_base_host,
+            port=main_base_port
         )
         query = """
             select
