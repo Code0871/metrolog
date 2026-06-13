@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-agent-service"
+version = "1.0.0"
+description = "Сервис ИИ агентов"
+
+dependencies = [
+    "fastapi == 0.136.3",
+    "yoyo-migrations == 9.0.0",
+    "psycopg2 == 2.9.12",
+    "python-dotenv == 1.2.2",
+]
