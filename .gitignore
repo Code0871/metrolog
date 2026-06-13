@@ -28,6 +28,8 @@ logs/
 # Артефакты моделей
 *.pkl
 *.joblib
+*.cbm
+/catboost_info/
 
 # Переменные окружения
 *.env
@@ -41,5 +43,4 @@ snapshots/
 *.qdrant
 
 # AI
-.onnx
-onnx_model/
+/ai_model/
