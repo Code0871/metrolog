@@ -13,6 +13,11 @@ class Config:
             "database_url",
             f"postgresql://{self.database_user}:{self.database_password}@{self.db_host}:5432/{self.database_name}"
         )
+        self.main_base_host = os.getenv("main_base_host", "localhost")
+        self.main_base_port = os.getenv("main_base_port", "5432")
+        self.main_base_user = os.getenv("main_base_user", "postgres")
+        self.main_base_password = os.getenv("main_base_password")
+        self.main_base_dbname = os.getenv("main_base_dbname", "miinstance_base")
 
 # Использование
 config = Config()
